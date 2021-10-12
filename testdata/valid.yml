@@ -1,0 +1,12 @@
+---
+- name: Example 1
+  from:
+    provider: AWSIAMUser
+    spec:
+      accountId: 111
+      username: xxx
+  to:
+    - provider: AWSSharedCredentials
+      spec:
+        path: ./provider/to/awssharedcredentials/testdata/credentials.ini
+        profile: default
