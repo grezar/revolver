@@ -13,7 +13,6 @@ jobs:
         id: go
       - name: check out
         uses: actions/checkout@v2
-
   build:
     needs: setup
     runs-on: ubuntu-latest
