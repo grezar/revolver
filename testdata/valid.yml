@@ -10,3 +10,14 @@
       spec:
         path: ./provider/to/awssharedcredentials/testdata/credentials.ini
         profile: default
+    - provider: Tfe
+      spec:
+        organization: org1
+        workspace: ws1
+        secrets:
+          - name: AWS_ACCESS_KEY_ID
+            value: "access_key"
+            category: "env"
+          - name: AWS_SECRET_ACCESS_KEY
+            value: "secret"
+            category: "env"
