@@ -2,11 +2,12 @@ package awssharedcredentials
 
 import (
 	"bufio"
+	"context"
 	"os"
 
 	"github.com/goccy/go-yaml"
 	toprovider "github.com/grezar/revolver/provider/to"
-	"github.com/grezar/revolver/repository"
+	"github.com/grezar/revolver/secrets"
 	"gopkg.in/ini.v1"
 )
 
@@ -15,8 +16,8 @@ const (
 )
 
 var refs = map[string]string{
-	"aws_access_key_id":     "AWSAccessKeyID",
-	"aws_secret_access_key": "AWSSecretAccessKey",
+	"aws_access_key_id":     "{{ .AWSAccessKeyID }}",
+	"aws_secret_access_key": "{{ .AWSSecretAccessKey }}",
 }
 
 func init() {
@@ -48,14 +49,14 @@ type Spec struct {
 }
 
 // UpdateSecret implements toprovider.Operator interface
-func (s *Spec) UpdateSecret(repo *repository.Repository) error {
+func (s *Spec) UpdateSecret(ctx context.Context) error {
 	c, err := ini.Load(s.Path)
 	if err != nil {
 		return err
 	}
 
 	for k, v := range s.Secrets {
-		secret, err := repo.Ref(v)
+		secret, err := secrets.ExecuteTemplate(ctx, v)
 		if err != nil {
 			return err
 		}

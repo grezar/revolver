@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/grezar/revolver/repository"
 	tfe "github.com/hashicorp/go-tfe"
 )
 
@@ -36,13 +35,9 @@ func TestSpec_UpdateSecret(t *testing.T) {
 		Variables    func(t *testing.T, ctrl *gomock.Controller, workspaceID string) *tfe.MockVariables
 		Workspaces   func(t *testing.T, ctrl *gomock.Controller, organization string, workspace string, workspaceID string) *tfe.MockWorkspaces
 	}
-	type args struct {
-		repo *repository.Repository
-	}
 	tests := []struct {
 		name    string
 		fields  fields
-		args    args
 		wantErr bool
 	}{
 		{
@@ -315,7 +310,9 @@ func TestSpec_UpdateSecret(t *testing.T) {
 				Client:       mockTfeAPI,
 			}
 
-			if err := s.UpdateSecret(tt.args.repo); (err != nil) != tt.wantErr {
+			ctx := context.Background()
+
+			if err := s.UpdateSecret(ctx); (err != nil) != tt.wantErr {
 				t.Errorf("Spec.UpdateSecret() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

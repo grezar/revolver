@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/grezar/revolver/provider/from/awsiamuser/mock"
-	"github.com/grezar/revolver/repository"
+	"github.com/grezar/revolver/secrets"
 )
 
 func TestSpec_RenewKey(t *testing.T) {
@@ -22,9 +22,10 @@ func TestSpec_RenewKey(t *testing.T) {
 		MockIAMAccessKeyAPI mock.MockIAMAccessKeyAPI
 	}
 	tests := []struct {
-		name   string
-		fields fields
-		want   *repository.Repository
+		name    string
+		fields  fields
+		want    secrets.Secrets
+		wantErr bool
 	}{
 		{
 			name: "Create a new key due to no key was found",
@@ -43,11 +44,9 @@ func TestSpec_RenewKey(t *testing.T) {
 					CreateAccessKeyAPI: mock.NewMockCreateAccessKeyAPI(),
 				},
 			},
-			want: &repository.Repository{
-				Secrets: map[string]string{
-					"AWSAccessKeyID":     "BBBBBBBBBBBB",
-					"AWSSecretAccessKey": "CCCCCCCCCCCC",
-				},
+			want: secrets.Secrets{
+				"AWSAccessKeyID":     "BBBBBBBBBBBB",
+				"AWSSecretAccessKey": "CCCCCCCCCCCC",
 			},
 		},
 		{
@@ -60,7 +59,7 @@ func TestSpec_RenewKey(t *testing.T) {
 					ListAccessKeysAPI: mock.NewMockListAccessKeysAPI(),
 				},
 			},
-			want: &repository.Repository{},
+			want: nil,
 		},
 		{
 			name: "Renew a key, there's an expired key",
@@ -73,11 +72,9 @@ func TestSpec_RenewKey(t *testing.T) {
 					CreateAccessKeyAPI: mock.NewMockCreateAccessKeyAPI(),
 				},
 			},
-			want: &repository.Repository{
-				Secrets: map[string]string{
-					"AWSAccessKeyID":     "BBBBBBBBBBBB",
-					"AWSSecretAccessKey": "CCCCCCCCCCCC",
-				},
+			want: secrets.Secrets{
+				"AWSAccessKeyID":     "BBBBBBBBBBBB",
+				"AWSSecretAccessKey": "CCCCCCCCCCCC",
 			},
 		},
 		{
@@ -107,7 +104,7 @@ func TestSpec_RenewKey(t *testing.T) {
 					),
 				},
 			},
-			want: &repository.Repository{},
+			want: nil,
 		},
 	}
 	for _, tt := range tests {
@@ -118,7 +115,11 @@ func TestSpec_RenewKey(t *testing.T) {
 				Expiration: tt.fields.Expiration,
 				Client:     tt.fields.MockIAMAccessKeyAPI,
 			}
-			got, _ := s.RenewKey()
+			ctx := context.Background()
+			got, err := s.RenewKey(ctx)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Spec.RenewKey() error = %v, wantErr %v", err, tt.wantErr)
+			}
 			if !reflect.DeepEqual(got, tt.want) {
 				fmt.Println(got)
 				t.Errorf("Spec.RenewKey() = %v, want %v", got, tt.want)
