@@ -16,8 +16,8 @@
         workspace: ws1
         secrets:
           - name: AWS_ACCESS_KEY_ID
-            value: "access_key"
+            value: "{{ .AWSAccessKeyId }}"
             category: "env"
           - name: AWS_SECRET_ACCESS_KEY
-            value: "secret"
+            value: "{{ .AWSSecretAccessKey }}"
             category: "env"

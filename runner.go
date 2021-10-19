@@ -1,9 +1,11 @@
 package revolver
 
 import (
+	"context"
 	"os"
 
 	"github.com/grezar/revolver/schema"
+	"github.com/grezar/revolver/secrets"
 )
 
 type Runner struct {
@@ -27,19 +29,23 @@ func (r *Runner) Run() error {
 		return err
 	}
 	for _, rn := range rotations {
-		repo, err := rn.From.Spec.Operator.RenewKey()
+		ctx := context.Background()
+
+		renewedSecrets, err := rn.From.Spec.Operator.RenewKey(ctx)
 		if err != nil {
 			return err
 		}
 
+		ctx = secrets.WithSecrets(ctx, renewedSecrets)
+
 		for _, to := range rn.To {
-			err := to.Spec.Operator.UpdateSecret(repo)
+			err := to.Spec.Operator.UpdateSecret(ctx)
 			if err != nil {
 				return err
 			}
 		}
 
-		err = rn.From.Spec.DeleteKey()
+		err = rn.From.Spec.DeleteKey(ctx)
 		if err != nil {
 			return err
 		}

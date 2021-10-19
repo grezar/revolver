@@ -12,21 +12,22 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/goccy/go-yaml"
 	fromprovider "github.com/grezar/revolver/provider/from"
-	"github.com/grezar/revolver/repository"
+	"github.com/grezar/revolver/secrets"
 	str2duration "github.com/xhit/go-str2duration/v2"
 )
 
-const name = "AWSIAMUser"
+const (
+	name                  = "AWSIAMUser"
+	keyAWSAccessKeyID     = "AWSAccessKeyID"
+	keyAWSSecretAccessKey = "AWSSecretAccessKey"
+)
 
 func init() {
 	fromprovider.Register(&AWSIAMUser{})
 }
 
 // fromprovider.Provider
-type AWSIAMUser struct {
-	AWSAccessKeyID     string
-	AWSSecretAccessKey string
-}
+type AWSIAMUser struct {}
 
 func (u *AWSIAMUser) Name() string {
 	return name
@@ -53,19 +54,19 @@ type Spec struct {
 	Client        IAMAccessKeyAPI
 }
 
-func (s *Spec) buildClient() (IAMAccessKeyAPI, error) {
+func (s *Spec) buildClient(ctx context.Context) (IAMAccessKeyAPI, error) {
 	if s.Client != nil {
 		return s.Client, nil
 	}
-	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion("ap-northeast-1"))
+	cfg, err := config.LoadDefaultConfig(ctx, config.WithRegion("ap-northeast-1"))
 	if err != nil {
 		return nil, err
 	}
 	return iam.NewFromConfig(cfg), nil
 }
 
-func (s *Spec) RenewKey() (*repository.Repository, error) {
-	client, err := s.buildClient()
+func (s *Spec) RenewKey(ctx context.Context) (secrets.Secrets, error) {
+	client, err := s.buildClient(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +74,7 @@ func (s *Spec) RenewKey() (*repository.Repository, error) {
 	inpt := &iam.ListAccessKeysInput{
 		UserName: aws.String(s.Username),
 	}
-	keys, err := ListAccessKeys(context.TODO(), client, inpt)
+	keys, err := ListAccessKeys(ctx, client, inpt)
 	if err != nil {
 		return nil, err
 	}
@@ -105,28 +106,26 @@ so manually delete one or more keys and try again.
 		return nil, errors.New("Unhandled number of access keys has found")
 	}
 
-	var repo repository.Repository
-
 	if keyCreation {
 		input := &iam.CreateAccessKeyInput{
 			UserName: aws.String(s.Username),
 		}
-		output, err := CreateAccessKey(context.TODO(), client, input)
+		output, err := CreateAccessKey(ctx, client, input)
 		if err != nil {
 			return nil, err
 		}
-		repo = repository.Repository{
-			Secrets: map[string]string{
-				"AWSAccessKeyID":     aws.ToString(output.AccessKey.AccessKeyId),
-				"AWSSecretAccessKey": aws.ToString(output.AccessKey.SecretAccessKey),
-			},
-		}
+
+		return secrets.Secrets{
+			keyAWSAccessKeyID:     aws.ToString(output.AccessKey.AccessKeyId),
+			keyAWSSecretAccessKey: aws.ToString(output.AccessKey.SecretAccessKey),
+		}, nil
 	}
-	return &repo, nil
+
+	return nil, nil
 }
 
-func (s *Spec) DeleteKey() error {
-	client, err := s.buildClient()
+func (s *Spec) DeleteKey(ctx context.Context) error {
+	client, err := s.buildClient(ctx)
 	if err != nil {
 		return err
 	}
@@ -135,7 +134,7 @@ func (s *Spec) DeleteKey() error {
 			AccessKeyId: k.AccessKeyId,
 			UserName:    k.UserName,
 		}
-		_, err := DeleteAccessKey(context.TODO(), client, input)
+		_, err := DeleteAccessKey(ctx, client, input)
 		if err != nil {
 			return err
 		}

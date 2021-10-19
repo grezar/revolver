@@ -1,8 +1,6 @@
 package toprovider
 
-import (
-	"github.com/grezar/revolver/repository"
-)
+import "context"
 
 var (
 	registry = map[string]Provider{}
@@ -22,5 +20,5 @@ type Provider interface {
 }
 
 type Operator interface {
-	UpdateSecret(*repository.Repository) error
+	UpdateSecret(ctx context.Context) error
 }

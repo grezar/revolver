@@ -1,7 +1,9 @@
 package fromprovider
 
 import (
-	"github.com/grezar/revolver/repository"
+	"context"
+
+	"github.com/grezar/revolver/secrets"
 )
 
 var (
@@ -22,6 +24,6 @@ type Provider interface {
 }
 
 type Operator interface {
-	RenewKey() (*repository.Repository, error)
-	DeleteKey() error
+	RenewKey(ctx context.Context) (secrets.Secrets, error)
+	DeleteKey(ctx context.Context) error
 }

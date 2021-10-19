@@ -7,7 +7,7 @@ import (
 
 	"github.com/goccy/go-yaml"
 	toprovider "github.com/grezar/revolver/provider/to"
-	"github.com/grezar/revolver/repository"
+	"github.com/grezar/revolver/secrets"
 	tfe "github.com/hashicorp/go-tfe"
 )
 
@@ -75,13 +75,11 @@ func (s *Spec) buildClient() (*tfe.Client, error) {
 }
 
 // UpdateSecret implements toprovider.Operator interface
-func (s *Spec) UpdateSecret(repo *repository.Repository) error {
+func (s *Spec) UpdateSecret(ctx context.Context) error {
 	api, err := s.buildClient()
 	if err != nil {
 		return err
 	}
-
-	ctx := context.Background()
 
 	ws, err := api.Workspaces.List(ctx, s.Organization, tfe.WorkspaceListOptions{
 		Search: tfe.String(s.Workspace),
@@ -115,11 +113,16 @@ func (s *Spec) UpdateSecret(repo *repository.Repository) error {
 			return errors.New("Unsupported category specified. Only \"env\" or \"terraform\" are available")
 		}
 
+		secret, err := secrets.ExecuteTemplate(ctx, s.Value)
+		if err != nil {
+			return err
+		}
+
 		wv := workspaceVariableList[s.Name]
 		if wv != nil && (categoryType == wv.Category) {
 			_, err := api.Variables.Update(ctx, workspaceID, wv.ID, tfe.VariableUpdateOptions{
 				Key:       tfe.String(s.Name),
-				Value:     tfe.String(s.Value),
+				Value:     tfe.String(secret),
 				Sensitive: tfe.Bool(true),
 			})
 			if err != nil {
@@ -128,7 +131,7 @@ func (s *Spec) UpdateSecret(repo *repository.Repository) error {
 		} else {
 			_, err := api.Variables.Create(ctx, workspaceID, tfe.VariableCreateOptions{
 				Key:       tfe.String(s.Name),
-				Value:     tfe.String(s.Value),
+				Value:     tfe.String(secret),
 				Category:  tfe.Category(categoryType),
 				Sensitive: tfe.Bool(true),
 			})
