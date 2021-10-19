@@ -4,6 +4,9 @@ import (
 	"context"
 	"os"
 
+	_ "github.com/grezar/revolver/provider/from/awsiamuser"
+	_ "github.com/grezar/revolver/provider/to/awssharedcredentials"
+	_ "github.com/grezar/revolver/provider/to/tfe"
 	"github.com/grezar/revolver/schema"
 	"github.com/grezar/revolver/secrets"
 )
