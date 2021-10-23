@@ -20,6 +20,7 @@ const (
 	name                  = "AWSIAMUser"
 	keyAWSAccessKeyID     = "AWSAccessKeyID"
 	keyAWSSecretAccessKey = "AWSSecretAccessKey"
+	awsDefaultRegion      = "us-east-1"
 )
 
 func init() {
@@ -58,7 +59,7 @@ func (s *Spec) buildClient(ctx context.Context) (IAMAccessKeyAPI, error) {
 	if s.Client != nil {
 		return s.Client, nil
 	}
-	cfg, err := config.LoadDefaultConfig(ctx, config.WithRegion("ap-northeast-1"))
+	cfg, err := config.LoadDefaultConfig(ctx, config.WithRegion(awsDefaultRegion))
 	if err != nil {
 		return nil, err
 	}
