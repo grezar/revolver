@@ -2,7 +2,6 @@ package awsiamuser
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
@@ -13,6 +12,7 @@ import (
 	"github.com/goccy/go-yaml"
 	fromprovider "github.com/grezar/revolver/provider/from"
 	"github.com/grezar/revolver/secrets"
+	log "github.com/sirupsen/logrus"
 	str2duration "github.com/xhit/go-str2duration/v2"
 )
 
@@ -79,7 +79,6 @@ func (s *Spec) RenewKey(ctx context.Context) (secrets.Secrets, error) {
 		return nil, err
 	}
 
-	var keyCreation bool
 	expiration, err := str2duration.ParseDuration(s.Expiration)
 	if err != nil {
 		return nil, err
@@ -87,41 +86,38 @@ func (s *Spec) RenewKey(ctx context.Context) (secrets.Secrets, error) {
 
 	switch len(keys.AccessKeyMetadata) {
 	case 0:
-		keyCreation = true
+		log.Info("Create a new access key since no key is found.")
 	case 1:
 		if expiration <= time.Since(aws.ToTime(keys.AccessKeyMetadata[0].CreateDate)) {
-			keyCreation = true
+			log.Info("Create a new access key since the existing key is expired")
+
 			s.DeletableKeys = append(s.DeletableKeys, types.AccessKey{
 				AccessKeyId: keys.AccessKeyMetadata[0].AccessKeyId,
 				UserName:    keys.AccessKeyMetadata[0].UserName,
 			})
+		} else {
+			log.Info("The key hasn't expired yet. Do nothing.")
+			return nil, nil
 		}
 	case 2:
-		// FIXME: improve text format
-		fmt.Printf(`[WARN] Two keys were found for AWS IAM User: %s
-Revolver cannot create a new key and proceed with the key rotation process,
-so manually delete one or more keys and try again.
-`, s.Username)
+		return nil, fmt.Errorf(`The user "%s" already has two access keys. Revolver cannot create a new key and cannot continue with the key rotation process. Please delete at least one of the existing keys and try again.`, s.Username)
 	default:
-		return nil, errors.New("Unhandled number of access keys has found")
+		panic("never reach here")
 	}
 
-	if keyCreation {
-		input := &iam.CreateAccessKeyInput{
-			UserName: aws.String(s.Username),
-		}
-		output, err := CreateAccessKey(ctx, client, input)
-		if err != nil {
-			return nil, err
-		}
-
-		return secrets.Secrets{
-			keyAWSAccessKeyID:     aws.ToString(output.AccessKey.AccessKeyId),
-			keyAWSSecretAccessKey: aws.ToString(output.AccessKey.SecretAccessKey),
-		}, nil
+	input := &iam.CreateAccessKeyInput{
+		UserName: aws.String(s.Username),
 	}
+	output, err := CreateAccessKey(ctx, client, input)
+	if err != nil {
+		return nil, err
+	}
+	log.Info("Successfully created a new key.")
 
-	return nil, nil
+	return secrets.Secrets{
+		keyAWSAccessKeyID:     aws.ToString(output.AccessKey.AccessKeyId),
+		keyAWSSecretAccessKey: aws.ToString(output.AccessKey.SecretAccessKey),
+	}, nil
 }
 
 func (s *Spec) DeleteKey(ctx context.Context) error {
@@ -130,6 +126,8 @@ func (s *Spec) DeleteKey(ctx context.Context) error {
 		return err
 	}
 	for _, k := range s.DeletableKeys {
+		log.Info("Delete the existing key to rotate.")
+
 		input := &iam.DeleteAccessKeyInput{
 			AccessKeyId: k.AccessKeyId,
 			UserName:    k.UserName,
@@ -138,6 +136,8 @@ func (s *Spec) DeleteKey(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
+
+		log.Info("Successfully deleted the existing key.")
 	}
 	return nil
 }

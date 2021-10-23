@@ -9,6 +9,7 @@ import (
 	_ "github.com/grezar/revolver/provider/to/tfe"
 	"github.com/grezar/revolver/schema"
 	"github.com/grezar/revolver/secrets"
+	log "github.com/sirupsen/logrus"
 )
 
 type Runner struct {
@@ -32,16 +33,27 @@ func (r *Runner) Run() error {
 		return err
 	}
 	for _, rn := range rotations {
+		log.Infof("Start %s\n", rn.Name)
+
 		ctx := context.Background()
+
+		log.WithFields(log.Fields{
+			"provider": rn.From.Provider,
+		})
 
 		renewedSecrets, err := rn.From.Spec.Operator.RenewKey(ctx)
 		if err != nil {
-			return err
+			log.Error(err)
+			continue
 		}
 
 		ctx = secrets.WithSecrets(ctx, renewedSecrets)
 
 		for _, to := range rn.To {
+			log.WithFields(log.Fields{
+				"provider": to.Provider,
+			})
+
 			err := to.Spec.Operator.UpdateSecret(ctx)
 			if err != nil {
 				return err
@@ -52,6 +64,8 @@ func (r *Runner) Run() error {
 		if err != nil {
 			return err
 		}
+
+		log.Infof("Finish %s\n", rn.Name)
 	}
 
 	return nil

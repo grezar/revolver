@@ -8,6 +8,7 @@ import (
 	"github.com/goccy/go-yaml"
 	toprovider "github.com/grezar/revolver/provider/to"
 	"github.com/grezar/revolver/secrets"
+	log "github.com/sirupsen/logrus"
 	"gopkg.in/ini.v1"
 )
 
@@ -69,12 +70,18 @@ func (s *Spec) UpdateSecret(ctx context.Context) error {
 	}
 	defer f.Close()
 
+	log.Infof("Write the IAM access key as profile %s to %s", s.Profile, s.Path)
+
 	w := bufio.NewWriter(f)
 	_, err = c.WriteTo(w)
 	if err != nil {
 		return err
 	}
-	w.Flush()
+	err = w.Flush()
+	if err != nil {
+		return err
+	}
+	log.Infof("Success.")
 
 	return nil
 }
