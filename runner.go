@@ -32,6 +32,8 @@ func (r *Runner) Run() error {
 	if err != nil {
 		return err
 	}
+
+	// TOOD: Transactional operation is needed for safety key rotations
 	for _, rn := range rotations {
 		log.Infof("Start %s\n", rn.Name)
 
