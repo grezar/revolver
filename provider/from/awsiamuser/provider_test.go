@@ -78,7 +78,7 @@ func TestSpec_RenewKey(t *testing.T) {
 			},
 		},
 		{
-			name: "Do nothing but warn to require manual operation due to there are two keys",
+			name: "Do nothing, but require to delete the key",
 			fields: fields{
 				AccountID:  "0123456789",
 				Username:   "test-iam-user",
@@ -104,7 +104,7 @@ func TestSpec_RenewKey(t *testing.T) {
 					),
 				},
 			},
-			want: nil,
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
