@@ -126,6 +126,10 @@ https://aws.github.io/aws-sdk-go-v2/docs/configuring-sdk/
 - `expiration` - (Defaults to 90d) Specify the validity period of the key as a string in the following format `1w (week)`, `1d (day)`, `1h (hour)`, `1m (minute)`, `1s (second)`.
    You can also combine them `1w2d3h4m5s`.
 
+#### Secrets
+- `.AWSAccessKeyID` - ID of AWS IAM User access key
+- `.AWSSecretAccessKey` - Secret key of AWS IAM User access key
+
 <a name="to-awssharedcredentials"></a>
 ### To/AWSSharedCredentials
 
