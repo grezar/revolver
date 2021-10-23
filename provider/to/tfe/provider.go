@@ -9,6 +9,7 @@ import (
 	toprovider "github.com/grezar/revolver/provider/to"
 	"github.com/grezar/revolver/secrets"
 	tfe "github.com/hashicorp/go-tfe"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -89,7 +90,7 @@ func (s *Spec) UpdateSecret(ctx context.Context) error {
 	}
 
 	if len(ws.Items) > 1 {
-		return errors.New("Multiple workspaces were found. Please specify an exact matching name")
+		return errors.New("Multiple workspaces were found. Please specify a name that matches only one workspace.")
 	}
 
 	workspaceID := ws.Items[0].ID
@@ -107,31 +108,35 @@ func (s *Spec) UpdateSecret(ctx context.Context) error {
 		}
 	}
 
-	for _, s := range s.Secrets {
-		categoryType := categoryTypes[s.Category]
+	for _, secret := range s.Secrets {
+		categoryType := categoryTypes[secret.Category]
 		if categoryType == "" {
 			return errors.New("Unsupported category specified. Only \"env\" or \"terraform\" are available")
 		}
 
-		secret, err := secrets.ExecuteTemplate(ctx, s.Value)
+		secretValue, err := secrets.ExecuteTemplate(ctx, secret.Value)
 		if err != nil {
 			return err
 		}
 
-		wv := workspaceVariableList[s.Name]
+		wv := workspaceVariableList[secret.Name]
 		if wv != nil && (categoryType == wv.Category) {
+			log.Infof("Update %s on the workspace %s", secret.Name, s.Workspace)
+
 			_, err := api.Variables.Update(ctx, workspaceID, wv.ID, tfe.VariableUpdateOptions{
-				Key:       tfe.String(s.Name),
-				Value:     tfe.String(secret),
+				Key:       tfe.String(secret.Name),
+				Value:     tfe.String(secretValue),
 				Sensitive: tfe.Bool(true),
 			})
 			if err != nil {
 				return err
 			}
 		} else {
+			log.Infof("Create %s on the workspace %s", secret.Name, s.Workspace)
+
 			_, err := api.Variables.Create(ctx, workspaceID, tfe.VariableCreateOptions{
-				Key:       tfe.String(s.Name),
-				Value:     tfe.String(secret),
+				Key:       tfe.String(secret.Name),
+				Value:     tfe.String(secretValue),
 				Category:  tfe.Category(categoryType),
 				Sensitive: tfe.Bool(true),
 			})
@@ -140,6 +145,7 @@ func (s *Spec) UpdateSecret(ctx context.Context) error {
 			}
 		}
 	}
+	log.Info("Success.")
 
 	return nil
 }
