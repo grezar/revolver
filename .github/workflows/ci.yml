@@ -3,32 +3,19 @@ name: Go Tests
 on: [push]
 
 jobs:
-  setup:
+  test:
+    name: Unit Test
     runs-on: ubuntu-latest
     steps:
-      - name: set up
+      - name: Install Go
         uses: actions/setup-go@v2
         with:
-          go-version: ^1.17
-        id: go
-      - name: check out
-        uses: actions/checkout@v2
-  build:
-    needs: setup
-    runs-on: ubuntu-latest
-    steps:
+          go-version: 1.17.x
       - uses: actions/checkout@v2
-      - name: build
-        run: go build ./...
-  test:
-    needs: setup
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: test
-        run: go test ./... -v
+      - name: Test
+        run: go test -v ./...
   lint:
-    needs: setup
+    name: Golang-CI Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
