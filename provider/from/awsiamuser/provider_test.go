@@ -3,6 +3,7 @@ package awsiamuser
 import (
 	"context"
 	"fmt"
+	"io"
 	"reflect"
 	"testing"
 	"time"
@@ -12,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/grezar/revolver/provider/from/awsiamuser/mock"
 	"github.com/grezar/revolver/secrets"
+	log "github.com/sirupsen/logrus"
 )
 
 func TestSpec_RenewKey(t *testing.T) {
@@ -108,12 +110,16 @@ func TestSpec_RenewKey(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		nullLogger := log.New()
+		nullLogger.SetOutput(io.Discard)
+
 		t.Run(tt.name, func(t *testing.T) {
 			s := &Spec{
 				AccountID:  tt.fields.AccountID,
 				Username:   tt.fields.Username,
 				Expiration: tt.fields.Expiration,
 				Client:     tt.fields.MockIAMAccessKeyAPI,
+				Logger:     nullLogger,
 			}
 			ctx := context.Background()
 			got, err := s.RenewKey(ctx)

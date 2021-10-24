@@ -38,6 +38,9 @@ func (a *AWSSharedCredentials) UnmarshalSpec(bytes []byte) (toprovider.Operator,
 		return nil, err
 	}
 	s.Secrets = refs
+	s.Logger = log.WithFields(log.Fields{
+		"provider": name,
+	})
 
 	return &s, nil
 }
@@ -47,6 +50,7 @@ type Spec struct {
 	Path    string `yaml:"path"`
 	Profile string `yaml:"profile"`
 	Secrets map[string]string
+	Logger  log.FieldLogger
 }
 
 // UpdateSecret implements toprovider.Operator interface
@@ -70,7 +74,7 @@ func (s *Spec) UpdateSecret(ctx context.Context) error {
 	}
 	defer f.Close()
 
-	log.Infof("Write the IAM access key as profile %s to %s", s.Profile, s.Path)
+	s.Logger.Infof("Write the IAM access key as profile %s to %s", s.Profile, s.Path)
 
 	w := bufio.NewWriter(f)
 	_, err = c.WriteTo(w)
@@ -81,7 +85,7 @@ func (s *Spec) UpdateSecret(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	log.Infof("Success.")
+	s.Logger.Infof("Success.")
 
 	return nil
 }

@@ -2,10 +2,12 @@ package tfe
 
 import (
 	"context"
+	"io"
 	"testing"
 
 	"github.com/golang/mock/gomock"
 	tfe "github.com/hashicorp/go-tfe"
+	log "github.com/sirupsen/logrus"
 )
 
 func defaultWorkspaces(t *testing.T, ctrl *gomock.Controller, organization string, workspace string, workspaceID string) *tfe.MockWorkspaces {
@@ -296,6 +298,9 @@ func TestSpec_UpdateSecret(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		nullLogger := log.New()
+		nullLogger.SetOutput(io.Discard)
+
 		t.Run(tt.name, func(t *testing.T) {
 			mockTfeAPI := &tfe.Client{}
 			ctrl := gomock.NewController(t)
@@ -308,6 +313,7 @@ func TestSpec_UpdateSecret(t *testing.T) {
 				Workspace:    tt.fields.Workspace,
 				Secrets:      tt.fields.Secrets,
 				Client:       mockTfeAPI,
+				Logger:       nullLogger,
 			}
 
 			ctx := context.Background()

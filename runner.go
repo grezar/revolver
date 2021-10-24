@@ -39,32 +39,32 @@ func (r *Runner) Run() error {
 
 		ctx := context.Background()
 
-		log.WithFields(log.Fields{
-			"provider": rn.From.Provider,
-		})
-
 		renewedSecrets, err := rn.From.Spec.Operator.RenewKey(ctx)
 		if err != nil {
-			log.Error(err)
+			log.WithFields(log.Fields{
+				"provider": rn.From.Provider,
+			}).Error(err)
 			continue
 		}
 
 		ctx = secrets.WithSecrets(ctx, renewedSecrets)
 
 		for _, to := range rn.To {
-			log.WithFields(log.Fields{
-				"provider": to.Provider,
-			})
-
 			err := to.Spec.Operator.UpdateSecret(ctx)
 			if err != nil {
-				return err
+				log.WithFields(log.Fields{
+					"provider": to.Provider,
+				}).Error(err)
+				continue
 			}
 		}
 
 		err = rn.From.Spec.DeleteKey(ctx)
 		if err != nil {
-			return err
+			log.WithFields(log.Fields{
+				"provider": rn.From.Provider,
+			}).Error(err)
+			continue
 		}
 
 		log.Infof("Finish %s\n", rn.Name)
