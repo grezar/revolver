@@ -8,7 +8,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/iam v1.10.1
 	github.com/goccy/go-yaml v1.9.4
 	github.com/golang/mock v1.6.0
-	github.com/hashicorp/go-tfe v0.19.1-0.20211011160714-ae91dad61b19
+	github.com/hashicorp/go-tfe v0.20.0
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.8.1
 	github.com/urfave/cli/v2 v2.3.0
@@ -36,6 +36,6 @@ require (
 	github.com/russross/blackfriday/v2 v2.0.1 // indirect
 	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
 	golang.org/x/sys v0.0.0-20210510120138-977fb7262007 // indirect
-	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4 // indirect
+	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 )
