@@ -43,6 +43,9 @@ func (u *AWSIAMUser) UnmarshalSpec(bytes []byte) (fromprovider.Operator, error) 
 		// default expiration is set to 90 days
 		s.Expiration = "90d"
 	}
+	s.Logger = log.WithFields(log.Fields{
+		"provider": name,
+	})
 	return &s, nil
 }
 
@@ -53,6 +56,7 @@ type Spec struct {
 	Expiration    string `yaml:"expiration"`
 	DeletableKeys []types.AccessKey
 	Client        IAMAccessKeyAPI
+	Logger        log.FieldLogger
 }
 
 func (s *Spec) buildClient(ctx context.Context) (IAMAccessKeyAPI, error) {
@@ -87,17 +91,17 @@ func (s *Spec) RenewKey(ctx context.Context) (secrets.Secrets, error) {
 
 	switch len(keys.AccessKeyMetadata) {
 	case 0:
-		log.Info("Create a new access key since no key is found.")
+		s.Logger.Info("Create a new access key since no key is found.")
 	case 1:
 		if expiration <= time.Since(aws.ToTime(keys.AccessKeyMetadata[0].CreateDate)) {
-			log.Info("Create a new access key since the existing key is expired")
+			s.Logger.Info("Create a new access key since the existing key is expired")
 
 			s.DeletableKeys = append(s.DeletableKeys, types.AccessKey{
 				AccessKeyId: keys.AccessKeyMetadata[0].AccessKeyId,
 				UserName:    keys.AccessKeyMetadata[0].UserName,
 			})
 		} else {
-			log.Info("The key hasn't expired yet. Do nothing.")
+			s.Logger.Info("The key hasn't expired yet. Do nothing.")
 			return nil, nil
 		}
 	case 2:
@@ -113,7 +117,7 @@ func (s *Spec) RenewKey(ctx context.Context) (secrets.Secrets, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Info("Successfully created a new key.")
+	s.Logger.Info("Successfully created a new key.")
 
 	return secrets.Secrets{
 		keyAWSAccessKeyID:     aws.ToString(output.AccessKey.AccessKeyId),
@@ -127,7 +131,7 @@ func (s *Spec) DeleteKey(ctx context.Context) error {
 		return err
 	}
 	for _, k := range s.DeletableKeys {
-		log.Info("Delete the existing key to rotate.")
+		s.Logger.Info("Delete the existing key to rotate.")
 
 		input := &iam.DeleteAccessKeyInput{
 			AccessKeyId: k.AccessKeyId,
@@ -138,7 +142,7 @@ func (s *Spec) DeleteKey(ctx context.Context) error {
 			return err
 		}
 
-		log.Info("Successfully deleted the existing key.")
+		s.Logger.Info("Successfully deleted the existing key.")
 	}
 	return nil
 }

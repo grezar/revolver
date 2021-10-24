@@ -42,6 +42,9 @@ func (t *Tfe) UnmarshalSpec(bytes []byte) (toprovider.Operator, error) {
 	if err := yaml.Unmarshal(bytes, &s); err != nil {
 		return nil, err
 	}
+	s.Logger = log.WithFields(log.Fields{
+		"provider": name,
+	})
 	return &s, nil
 }
 
@@ -51,6 +54,7 @@ type Spec struct {
 	Workspace    string `yaml:"workspace" validate:"required"`
 	Secrets      []Secret
 	Client       *tfe.Client
+	Logger       log.FieldLogger
 }
 
 type Secret struct {
@@ -121,7 +125,7 @@ func (s *Spec) UpdateSecret(ctx context.Context) error {
 
 		wv := workspaceVariableList[secret.Name]
 		if wv != nil && (categoryType == wv.Category) {
-			log.Infof("Update %s on the workspace %s", secret.Name, s.Workspace)
+			s.Logger.Infof("Update %s on the workspace %s", secret.Name, s.Workspace)
 
 			_, err := api.Variables.Update(ctx, workspaceID, wv.ID, tfe.VariableUpdateOptions{
 				Key:       tfe.String(secret.Name),
@@ -132,7 +136,7 @@ func (s *Spec) UpdateSecret(ctx context.Context) error {
 				return err
 			}
 		} else {
-			log.Infof("Create %s on the workspace %s", secret.Name, s.Workspace)
+			s.Logger.Infof("Create %s on the workspace %s", secret.Name, s.Workspace)
 
 			_, err := api.Variables.Create(ctx, workspaceID, tfe.VariableCreateOptions{
 				Key:       tfe.String(secret.Name),
@@ -145,7 +149,7 @@ func (s *Spec) UpdateSecret(ctx context.Context) error {
 			}
 		}
 	}
-	log.Info("Success.")
+	s.Logger.Info("Success.")
 
 	return nil
 }
