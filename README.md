@@ -240,8 +240,8 @@ If you are using AWSIAMUser, you can refer to `.AWSAccessKeyID` and `.AWSSecretA
 - `projectVariables` - (Optional) List of the CircleCI project and its variables. Either this or `contexts` is required.
     - `project` - (Required) Name of the CircleCI project.
     - `variables` - (Required) List of the CircleCI project variables to manage.
-        - name - (Required) Environment variable name of the CircleCI project.
-        - value - (Required) Environment variable value of the CircleCI project.
+        - `name` - (Required) Environment variable name of the CircleCI project.
+        - `value` - (Required) Environment variable value of the CircleCI project.
 - `contexts` - (Optional) List of the CircleCI context and its variables. Either this or `projectVariables` is required.
     - `name` - (Required) Name of the CircleCI context.
     - `variables` - (Required) List of the CircleCI context variables to manage.
