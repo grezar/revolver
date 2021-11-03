@@ -8,6 +8,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/iam v1.10.1
 	github.com/goccy/go-yaml v1.9.4
 	github.com/golang/mock v1.6.0
+	github.com/grezar/go-circleci v0.3.0
 	github.com/hashicorp/go-tfe v0.20.0
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.8.1

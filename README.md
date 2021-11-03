@@ -101,6 +101,7 @@ revolver rotate --config rotations.yaml
 * To
   * [AWSSharedCredentials](#to-awssharedcredentials)
   * [Tfe](#to-tfe)
+  * [CircleCI](#to-circleci)
 
 <a name="from-awsiamuser"></a>
 ### From/AWSIAMUser
@@ -192,6 +193,60 @@ If you are using AWSIAMUser, you can refer to `.AWSAccessKeyID` and `.AWSSecretA
     - `name` - (Required) Workspace variable name.
     - `value` - (Required) Workspace variable value.
     - `category` - (Defaults to env) Workspace variable category. "env" or "terraform" is available. "env" corresponds to Environment variable, "terraform" corresponds to Terraform variable.
+
+<a name="to-circleci"></a>
+### To/CircleCI
+CircleCI is a provider for managing secret variables provided by *from provider* in projects or contexts of CircleCI.
+
+#### Authentication
+Generate a CircleCI API token and export it as an environment variable named `REVOLVER_CIRCLECI_TOKEN`.
+
+https://circleci.com/docs/2.0/managing-api-tokens/
+
+#### Example
+The following is an example of using AWSIAMUser and CircleCI in combination.
+
+If you are using AWSIAMUser, you can refer to `.AWSAccessKeyID` and `.AWSSecretAccessKey` using the Go Template in the *to provider* spec.
+
+```
+- name: Example 1
+  from:
+    provider: AWSIAMUser
+    spec:
+      accountId: 111
+      username: xxx
+  to:
+    - provider: CircleCI
+      spec:
+        owner: org1
+        projectVariables:
+          - project: gh/org1/prj1
+            variables:
+              - name: AWS_ACCESS_KEY_ID
+                value: "{{ .AWSAccessKeyID }}"
+              - name: AWS_SECRET_ACCESS_KEY
+                value: "{{ .AWSSecretAccessKey }}"
+        contexts:
+          - name: example-context
+            variables:
+              - name: AWS_ACCESS_KEY_ID
+                value: "{{ .AWSAccessKeyID }}"
+              - name: AWS_SECRET_ACCESS_KEY
+                value: "{{ .AWSSecretAccessKey }}"
+```
+
+#### Spec
+- `owner` - (Required) Name of the CircleCI organization.
+- `projectVariables` - (Optional) List of the CircleCI project and its variables. Either this or `contexts` is required.
+    - `project` - (Required) Name of the CircleCI project.
+    - `variables` - (Required) List of the CircleCI project variables to manage.
+        - name - (Required) Environment variable name of the CircleCI project.
+        - value - (Required) Environment variable value of the CircleCI project.
+- `contexts` - (Optional) List of the CircleCI context and its variables. Either this or `projectVariables` is required.
+    - `name` - (Required) Name of the CircleCI context.
+    - `variables` - (Required) List of the CircleCI context variables to manage.
+      - `name` - (Required) Environment variable name of the CircleCI context.
+      - `value` - (Required) Environment variable value of the CircleCI context.
 
 ## License
 [The MIT License (MIT)](https://https://github.com/grezar/revolver/blob/main/LICENSE)
