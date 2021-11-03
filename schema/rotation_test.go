@@ -6,6 +6,7 @@ import (
 
 	_ "github.com/grezar/revolver/provider/from/awsiamuser"
 	_ "github.com/grezar/revolver/provider/to/awssharedcredentials"
+	_ "github.com/grezar/revolver/provider/to/circleci"
 	_ "github.com/grezar/revolver/provider/to/tfe"
 )
 

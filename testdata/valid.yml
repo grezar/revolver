@@ -21,3 +21,21 @@
           - name: AWS_SECRET_ACCESS_KEY
             value: "{{ .AWSSecretAccessKey }}"
             category: "env"
+
+- name: Example 2
+  from:
+    provider: AWSIAMUser
+    spec:
+      accountId: 111
+      username: yyy
+  to:
+    - provider: CircleCI
+      spec:
+        owner: org1
+        projectVariables:
+          - project: gh/org1/prj1
+            variables:
+              - name: AWS_ACCESS_KEY_ID
+                value: "{{ .AWSAccessKeyID }}"
+              - name: AWS_SECRET_ACCESS_KEY
+                value: "{{ .AWSSecretAccessKey }}"
