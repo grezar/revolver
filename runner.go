@@ -40,7 +40,7 @@ func (r *Runner) Run() error {
 
 		ctx := context.Background()
 
-		renewedSecrets, err := rn.From.Spec.Operator.RenewKey(ctx)
+		renewedSecrets, err := rn.From.Spec.Operator.Do(ctx)
 		if err != nil {
 			log.WithFields(log.Fields{
 				"provider": rn.From.Provider,
@@ -56,7 +56,7 @@ func (r *Runner) Run() error {
 		ctx = secrets.WithSecrets(ctx, renewedSecrets)
 
 		for _, to := range rn.To {
-			err := to.Spec.Operator.UpdateSecret(ctx)
+			err := to.Spec.Operator.Do(ctx)
 			if err != nil {
 				log.WithFields(log.Fields{
 					"provider": to.Provider,
@@ -65,7 +65,7 @@ func (r *Runner) Run() error {
 			}
 		}
 
-		err = rn.From.Spec.DeleteKey(ctx)
+		err = rn.From.Spec.Cleanup(ctx)
 		if err != nil {
 			log.WithFields(log.Fields{
 				"provider": rn.From.Provider,
