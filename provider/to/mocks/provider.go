@@ -87,16 +87,16 @@ func (m *MockOperator) EXPECT() *MockOperatorMockRecorder {
 	return m.recorder
 }
 
-// UpdateSecret mocks base method.
-func (m *MockOperator) UpdateSecret(ctx context.Context) error {
+// Do mocks base method.
+func (m *MockOperator) Do(ctx context.Context) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateSecret", ctx)
+	ret := m.ctrl.Call(m, "Do", ctx)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// UpdateSecret indicates an expected call of UpdateSecret.
-func (mr *MockOperatorMockRecorder) UpdateSecret(ctx interface{}) *gomock.Call {
+// Do indicates an expected call of Do.
+func (mr *MockOperatorMockRecorder) Do(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSecret", reflect.TypeOf((*MockOperator)(nil).UpdateSecret), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Do", reflect.TypeOf((*MockOperator)(nil).Do), ctx)
 }

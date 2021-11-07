@@ -21,5 +21,5 @@ type Provider interface {
 }
 
 type Operator interface {
-	UpdateSecret(ctx context.Context) error
+	Do(ctx context.Context) error
 }
