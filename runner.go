@@ -71,7 +71,7 @@ func (r *Runner) Run() error {
 				log.WithFields(log.Fields{
 					"provider": to.Provider,
 				}).Error(err)
-				continue
+				break
 			}
 		}
 
