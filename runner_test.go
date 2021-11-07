@@ -2,6 +2,7 @@ package revolver
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -9,6 +10,10 @@ import (
 	mockedtp "github.com/grezar/revolver/provider/to/mocks"
 	"github.com/grezar/revolver/schema"
 	"github.com/grezar/revolver/secrets"
+)
+
+var (
+	errFakeRunnerTest = errors.New("runner test fake error")
 )
 
 func TestRunner_Run(t *testing.T) {
@@ -72,6 +77,32 @@ func TestRunner_Run(t *testing.T) {
 
 					mockedFromOperator := mockedfp.NewMockOperator(ctrl)
 					mockedFromOperator.EXPECT().RenewKey(ctx).Return(expectedSecrets, nil)
+
+					rotations := []*schema.Rotation{
+						{
+							Name: "Mocked Rotation",
+							From: schema.From{
+								Spec: schema.FromProviderSpec{
+									Operator: mockedFromOperator,
+								},
+							},
+						},
+					}
+
+					return rotations
+				},
+			},
+		},
+		{
+			name: "The from provider returns error and skip following operations",
+			fields: fields{
+				mockedRotations: func(t *testing.T, ctrl *gomock.Controller) []*schema.Rotation {
+					t.Helper()
+
+					ctx := context.Background()
+
+					mockedFromOperator := mockedfp.NewMockOperator(ctrl)
+					mockedFromOperator.EXPECT().RenewKey(ctx).Return(nil, errFakeRunnerTest)
 
 					rotations := []*schema.Rotation{
 						{
