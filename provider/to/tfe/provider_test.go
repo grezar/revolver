@@ -29,7 +29,7 @@ func defaultWorkspaces(t *testing.T, ctrl *gomock.Controller, organization strin
 	return mock
 }
 
-func TestSpec_UpdateSecret(t *testing.T) {
+func TestSpec_Do(t *testing.T) {
 	type fields struct {
 		Organization string
 		Workspace    string
@@ -318,8 +318,8 @@ func TestSpec_UpdateSecret(t *testing.T) {
 
 			ctx := context.Background()
 
-			if err := s.UpdateSecret(ctx); (err != nil) != tt.wantErr {
-				t.Errorf("Spec.UpdateSecret() error = %v, wantErr %v", err, tt.wantErr)
+			if err := s.Do(ctx); (err != nil) != tt.wantErr {
+				t.Errorf("Spec.Do() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

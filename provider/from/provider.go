@@ -25,6 +25,6 @@ type Provider interface {
 }
 
 type Operator interface {
-	RenewKey(ctx context.Context) (secrets.Secrets, error)
-	DeleteKey(ctx context.Context) error
+	Do(ctx context.Context) (secrets.Secrets, error)
+	Cleanup(ctx context.Context) error
 }
