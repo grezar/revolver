@@ -28,7 +28,7 @@ func init() {
 }
 
 // fromprovider.Provider
-type AWSIAMUser struct {}
+type AWSIAMUser struct{}
 
 func (u *AWSIAMUser) Name() string {
 	return name
@@ -70,7 +70,7 @@ func (s *Spec) buildClient(ctx context.Context) (IAMAccessKeyAPI, error) {
 	return iam.NewFromConfig(cfg), nil
 }
 
-func (s *Spec) RenewKey(ctx context.Context) (secrets.Secrets, error) {
+func (s *Spec) Do(ctx context.Context) (secrets.Secrets, error) {
 	client, err := s.buildClient(ctx)
 	if err != nil {
 		return nil, err
@@ -125,7 +125,7 @@ func (s *Spec) RenewKey(ctx context.Context) (secrets.Secrets, error) {
 	}, nil
 }
 
-func (s *Spec) DeleteKey(ctx context.Context) error {
+func (s *Spec) Cleanup(ctx context.Context) error {
 	client, err := s.buildClient(ctx)
 	if err != nil {
 		return err

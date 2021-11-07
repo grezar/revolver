@@ -16,7 +16,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func TestSpec_RenewKey(t *testing.T) {
+func TestSpec_Do(t *testing.T) {
 	type fields struct {
 		AccountID           string
 		Username            string
@@ -122,13 +122,13 @@ func TestSpec_RenewKey(t *testing.T) {
 				Logger:     nullLogger,
 			}
 			ctx := context.Background()
-			got, err := s.RenewKey(ctx)
+			got, err := s.Do(ctx)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("Spec.RenewKey() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("Spec.Do() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				fmt.Println(got)
-				t.Errorf("Spec.RenewKey() = %v, want %v", got, tt.want)
+				t.Errorf("Spec.Do() = %v, want %v", got, tt.want)
 			}
 		})
 	}

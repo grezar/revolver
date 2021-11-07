@@ -76,8 +76,8 @@ func (s *Spec) buildClient() (*circleci.Client, error) {
 	return client, nil
 }
 
-// UpdateSecret implements toprovider.Operator interface
-func (s *Spec) UpdateSecret(ctx context.Context) error {
+// Do implements toprovider.Operator interface
+func (s *Spec) Do(ctx context.Context) error {
 	api, err := s.buildClient()
 	if err != nil {
 		return err

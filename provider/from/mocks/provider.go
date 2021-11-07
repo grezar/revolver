@@ -88,31 +88,31 @@ func (m *MockOperator) EXPECT() *MockOperatorMockRecorder {
 	return m.recorder
 }
 
-// DeleteKey mocks base method.
-func (m *MockOperator) DeleteKey(ctx context.Context) error {
+// Cleanup mocks base method.
+func (m *MockOperator) Cleanup(ctx context.Context) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteKey", ctx)
+	ret := m.ctrl.Call(m, "Cleanup", ctx)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// DeleteKey indicates an expected call of DeleteKey.
-func (mr *MockOperatorMockRecorder) DeleteKey(ctx interface{}) *gomock.Call {
+// Cleanup indicates an expected call of Cleanup.
+func (mr *MockOperatorMockRecorder) Cleanup(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteKey", reflect.TypeOf((*MockOperator)(nil).DeleteKey), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Cleanup", reflect.TypeOf((*MockOperator)(nil).Cleanup), ctx)
 }
 
-// RenewKey mocks base method.
-func (m *MockOperator) RenewKey(ctx context.Context) (secrets.Secrets, error) {
+// Do mocks base method.
+func (m *MockOperator) Do(ctx context.Context) (secrets.Secrets, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RenewKey", ctx)
+	ret := m.ctrl.Call(m, "Do", ctx)
 	ret0, _ := ret[0].(secrets.Secrets)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// RenewKey indicates an expected call of RenewKey.
-func (mr *MockOperatorMockRecorder) RenewKey(ctx interface{}) *gomock.Call {
+// Do indicates an expected call of Do.
+func (mr *MockOperatorMockRecorder) Do(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenewKey", reflect.TypeOf((*MockOperator)(nil).RenewKey), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Do", reflect.TypeOf((*MockOperator)(nil).Do), ctx)
 }

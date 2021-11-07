@@ -53,8 +53,8 @@ type Spec struct {
 	Logger  log.FieldLogger
 }
 
-// UpdateSecret implements toprovider.Operator interface
-func (s *Spec) UpdateSecret(ctx context.Context) error {
+// Do implements toprovider.Operator interface
+func (s *Spec) Do(ctx context.Context) error {
 	c, err := ini.Load(s.Path)
 	if err != nil {
 		return err
