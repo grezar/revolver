@@ -61,6 +61,33 @@ func TestRunner_Run(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "Secrets aren't expired",
+			fields: fields{
+				mockedRotations: func(t *testing.T, ctrl *gomock.Controller) []*schema.Rotation {
+					t.Helper()
+
+					ctx := context.Background()
+					expectedSecrets := secrets.Secrets{}
+
+					mockedFromOperator := mockedfp.NewMockOperator(ctrl)
+					mockedFromOperator.EXPECT().RenewKey(ctx).Return(expectedSecrets, nil)
+
+					rotations := []*schema.Rotation{
+						{
+							Name: "Mocked Rotation",
+							From: schema.From{
+								Spec: schema.FromProviderSpec{
+									Operator: mockedFromOperator,
+								},
+							},
+						},
+					}
+
+					return rotations
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {

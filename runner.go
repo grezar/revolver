@@ -48,6 +48,11 @@ func (r *Runner) Run() error {
 			continue
 		}
 
+		// Skip the following operations if the secrets aren't renewed
+		if len(renewedSecrets) == 0 {
+			continue
+		}
+
 		ctx = secrets.WithSecrets(ctx, renewedSecrets)
 
 		for _, to := range rn.To {
