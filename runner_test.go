@@ -174,9 +174,7 @@ func TestRunner_Run(t *testing.T) {
 				rotations: tt.fields.mockedRotations(t, ctrl),
 			}
 
-			if err := r.Run(); (err != nil) != tt.wantErr {
-				t.Errorf("Runner.Run() error = %v, wantErr %v", err, tt.wantErr)
-			}
+			r.Run()
 		})
 	}
 }

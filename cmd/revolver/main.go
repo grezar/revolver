@@ -27,9 +27,7 @@ func main() {
 					if err != nil {
 						return err
 					}
-					if err := runner.Run(); err != nil {
-						return err
-					}
+					runner.Run()
 					return nil
 				},
 			},
