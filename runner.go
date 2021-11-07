@@ -34,55 +34,62 @@ func NewRunner(path string) (*Runner, error) {
 	}, nil
 }
 
-func (r *Runner) Run() error {
-	for _, rn := range r.rotations {
-		log.Infof("Start %s\n", rn.Name)
+func run(rn *schema.Rotation) {
+	log.Infof("Start %s\n", rn.Name)
 
-		ctx := context.Background()
+	ctx := context.Background()
 
-		renewedSecrets, err := rn.From.Spec.Operator.Do(ctx)
+	renewedSecrets, err := rn.From.Spec.Operator.Do(ctx)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"provider": rn.From.Provider,
+		}).Error(err)
+	}
+
+	// Skip the following operations if the secrets aren't renewed
+	if len(renewedSecrets) == 0 {
+		return
+	}
+
+	// Ensure that the cleanup process is invoked when the provider's Do
+	// operation succeeds
+	defer func() {
+		err = rn.From.Spec.Cleanup(ctx)
 		if err != nil {
 			log.WithFields(log.Fields{
 				"provider": rn.From.Provider,
 			}).Error(err)
-			continue
 		}
+	}()
 
-		// Skip the following operations if the secrets aren't renewed
-		if len(renewedSecrets) == 0 {
-			continue
-		}
+	ctx = secrets.WithSecrets(ctx, renewedSecrets)
 
-		// Ensure that the cleanup process is invoked when the provider's Do
-		// operation succeeds
-		defer func() {
-			err = rn.From.Spec.Cleanup(ctx)
+	var wg sync.WaitGroup
+	for _, to := range rn.To {
+		wg.Add(1)
+		go func(to *schema.To) {
+			defer wg.Done()
+			err := to.Spec.Operator.Do(ctx)
 			if err != nil {
 				log.WithFields(log.Fields{
-					"provider": rn.From.Provider,
+					"provider": to.Provider,
 				}).Error(err)
 			}
-		}()
-
-		ctx = secrets.WithSecrets(ctx, renewedSecrets)
-
-		var wg sync.WaitGroup
-		for _, to := range rn.To {
-			wg.Add(1)
-			go func(to *schema.To) {
-				defer wg.Done()
-				err := to.Spec.Operator.Do(ctx)
-				if err != nil {
-					log.WithFields(log.Fields{
-						"provider": to.Provider,
-					}).Error(err)
-				}
-			}(to)
-		}
-		wg.Wait()
-
-		log.Infof("Finish %s\n", rn.Name)
+		}(to)
 	}
+	wg.Wait()
 
-	return nil
+	log.Infof("Finish %s\n", rn.Name)
+}
+
+func (r *Runner) Run() {
+	var wg sync.WaitGroup
+	for _, rn := range r.rotations {
+		wg.Add(1)
+		go func(rn *schema.Rotation) {
+			defer wg.Done()
+			run(rn)
+		}(rn)
+		wg.Wait()
+	}
 }
