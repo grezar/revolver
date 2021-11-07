@@ -72,13 +72,12 @@ func (f *From) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	if p == nil {
 		return errors.New(fmt.Sprintf("unknown provider passed: %s", f.Provider))
 	}
-	if f.Spec.bytes != nil {
-		operator, err := p.UnmarshalSpec(f.Spec.bytes)
-		if err != nil {
-			return err
-		}
-		f.Spec.Operator = operator
+	operator, err := p.UnmarshalSpec(f.Spec.bytes)
+	if err != nil {
+		return err
 	}
+	f.Spec.Operator = operator
+
 	return nil
 }
 
@@ -91,12 +90,11 @@ func (t *To) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	if p == nil {
 		return errors.New(fmt.Sprintf("unknown provider passed: %s", t.Provider))
 	}
-	if t.Spec.bytes != nil {
-		operator, err := p.UnmarshalSpec(t.Spec.bytes)
-		if err != nil {
-			return err
-		}
-		t.Spec.Operator = operator
+	operator, err := p.UnmarshalSpec(t.Spec.bytes)
+	if err != nil {
+		return err
 	}
+	t.Spec.Operator = operator
+
 	return nil
 }
