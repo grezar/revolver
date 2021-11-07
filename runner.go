@@ -34,7 +34,6 @@ func NewRunner(path string) (*Runner, error) {
 }
 
 func (r *Runner) Run() error {
-	// TOOD: Transactional operation is needed for safety key rotations
 	for _, rn := range r.rotations {
 		log.Infof("Start %s\n", rn.Name)
 
@@ -53,6 +52,17 @@ func (r *Runner) Run() error {
 			continue
 		}
 
+		// Ensure that the cleanup process is invoked when the provider's Do
+		// operation succeeds
+		defer func() {
+			err = rn.From.Spec.Cleanup(ctx)
+			if err != nil {
+				log.WithFields(log.Fields{
+					"provider": rn.From.Provider,
+				}).Error(err)
+			}
+		}()
+
 		ctx = secrets.WithSecrets(ctx, renewedSecrets)
 
 		for _, to := range rn.To {
@@ -63,14 +73,6 @@ func (r *Runner) Run() error {
 				}).Error(err)
 				continue
 			}
-		}
-
-		err = rn.From.Spec.Cleanup(ctx)
-		if err != nil {
-			log.WithFields(log.Fields{
-				"provider": rn.From.Provider,
-			}).Error(err)
-			continue
 		}
 
 		log.Infof("Finish %s\n", rn.Name)
