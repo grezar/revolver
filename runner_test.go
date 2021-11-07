@@ -119,6 +119,52 @@ func TestRunner_Run(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "One or more to provider returns an error and the cleanup is invoked",
+			fields: fields{
+				mockedRotations: func(t *testing.T, ctrl *gomock.Controller) []*schema.Rotation {
+					t.Helper()
+
+					ctx := context.Background()
+					expectedSecrets := secrets.Secrets{
+						"KEY_ID": "key1",
+					}
+
+					mockedFromOperator := mockedfp.NewMockOperator(ctrl)
+					mockedToOperator := mockedtp.NewMockOperator(ctrl)
+					mockedFromOperator.EXPECT().Do(ctx).Return(expectedSecrets, nil)
+					ctx = secrets.WithSecrets(ctx, expectedSecrets)
+					mockedToOperator.EXPECT().Do(ctx).Return(errFakeRunnerTest)
+					mockedToOperator.EXPECT().Do(ctx).Return(nil)
+					mockedFromOperator.EXPECT().Cleanup(ctx)
+
+					rotations := []*schema.Rotation{
+						{
+							Name: "Mocked Rotation",
+							From: schema.From{
+								Spec: schema.FromProviderSpec{
+									Operator: mockedFromOperator,
+								},
+							},
+							To: []*schema.To{
+								{
+									Spec: schema.ToProviderSpec{
+										Operator: mockedToOperator,
+									},
+								},
+								{
+									Spec: schema.ToProviderSpec{
+										Operator: mockedToOperator,
+									},
+								},
+							},
+						},
+					}
+
+					return rotations
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -128,9 +174,7 @@ func TestRunner_Run(t *testing.T) {
 				rotations: tt.fields.mockedRotations(t, ctrl),
 			}
 
-			if err := r.Run(); (err != nil) != tt.wantErr {
-				t.Errorf("Runner.Run() error = %v, wantErr %v", err, tt.wantErr)
-			}
+			r.Run()
 		})
 	}
 }
