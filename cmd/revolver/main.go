@@ -9,32 +9,35 @@ import (
 )
 
 func main() {
-  app := &cli.App{
-    Commands: []*cli.Command{
-      {
-        Name:    "rotate",
-        Usage:   "Rotate secrets based on configured YAML",
-        Flags: []cli.Flag{
-          &cli.StringFlag{
-            Name:    "config",
-            Aliases: []string{"c"},
-            Usage:   "Load configuration from `FILE`",
-            Required: true,
-          },
-        },
-        Action:  func(c *cli.Context) error {
-          runner := revolver.NewRunner(c.String("config"))
-          if err := runner.Run(); err != nil {
-            return err
-          }
-          return nil
-        },
-      },
-    },
-  }
+	app := &cli.App{
+		Commands: []*cli.Command{
+			{
+				Name:  "rotate",
+				Usage: "Rotate secrets based on configured YAML",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:     "config",
+						Aliases:  []string{"c"},
+						Usage:    "Load configuration from `FILE`",
+						Required: true,
+					},
+				},
+				Action: func(c *cli.Context) error {
+					runner, err := revolver.NewRunner(c.String("config"))
+					if err != nil {
+						return err
+					}
+					if err := runner.Run(); err != nil {
+						return err
+					}
+					return nil
+				},
+			},
+		},
+	}
 
-  err := app.Run(os.Args)
-  if err != nil {
-    log.Fatal(err)
-  }
+	err := app.Run(os.Args)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
