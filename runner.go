@@ -3,6 +3,7 @@ package revolver
 import (
 	"context"
 	"os"
+	"sync"
 
 	_ "github.com/grezar/revolver/provider/from/awsiamuser"
 	_ "github.com/grezar/revolver/provider/to/awssharedcredentials"
@@ -65,15 +66,20 @@ func (r *Runner) Run() error {
 
 		ctx = secrets.WithSecrets(ctx, renewedSecrets)
 
+		var wg sync.WaitGroup
 		for _, to := range rn.To {
-			err := to.Spec.Operator.Do(ctx)
-			if err != nil {
-				log.WithFields(log.Fields{
-					"provider": to.Provider,
-				}).Error(err)
-				break
-			}
+			wg.Add(1)
+			go func(to *schema.To) {
+				defer wg.Done()
+				err := to.Spec.Operator.Do(ctx)
+				if err != nil {
+					log.WithFields(log.Fields{
+						"provider": to.Provider,
+					}).Error(err)
+				}
+			}(to)
 		}
+		wg.Wait()
 
 		log.Infof("Finish %s\n", rn.Name)
 	}

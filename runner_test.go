@@ -135,6 +135,7 @@ func TestRunner_Run(t *testing.T) {
 					mockedFromOperator.EXPECT().Do(ctx).Return(expectedSecrets, nil)
 					ctx = secrets.WithSecrets(ctx, expectedSecrets)
 					mockedToOperator.EXPECT().Do(ctx).Return(errFakeRunnerTest)
+					mockedToOperator.EXPECT().Do(ctx).Return(nil)
 					mockedFromOperator.EXPECT().Cleanup(ctx)
 
 					rotations := []*schema.Rotation{
