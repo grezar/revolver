@@ -39,3 +39,12 @@
                 value: "{{ .AWSAccessKeyID }}"
               - name: AWS_SECRET_ACCESS_KEY
                 value: "{{ .AWSSecretAccessKey }}"
+
+- name: Nil Provider Spec
+  from:
+    provider: AWSIAMUser
+    spec:
+      accountId: 111
+      username: zzz
+  to:
+    - provider: AWSSharedCredentials
