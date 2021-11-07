@@ -14,28 +14,28 @@ import (
 )
 
 type Runner struct {
-	config string
+	rotations []*schema.Rotation
 }
 
-func NewRunner(path string) *Runner {
-	return &Runner{
-		config: path,
-	}
-}
-
-func (r *Runner) Run() error {
-	f, err := os.Open(r.config)
+func NewRunner(path string) (*Runner, error) {
+	f, err := os.Open(path)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer f.Close()
 	rotations, err := schema.LoadRotations(f)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
+	return &Runner{
+		rotations: rotations,
+	}, nil
+}
+
+func (r *Runner) Run() error {
 	// TOOD: Transactional operation is needed for safety key rotations
-	for _, rn := range rotations {
+	for _, rn := range r.rotations {
 		log.Infof("Start %s\n", rn.Name)
 
 		ctx := context.Background()
@@ -45,6 +45,11 @@ func (r *Runner) Run() error {
 			log.WithFields(log.Fields{
 				"provider": rn.From.Provider,
 			}).Error(err)
+			continue
+		}
+
+		// Skip the following operations if the secrets aren't renewed
+		if len(renewedSecrets) == 0 {
 			continue
 		}
 
