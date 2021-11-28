@@ -9,6 +9,55 @@ import (
 	mock "github.com/grezar/go-circleci/mocks"
 )
 
+func TestSpec_Summary(t *testing.T) {
+	type fields struct {
+		Owner            string
+		ProjectVariables []*ProjectVariable
+		Contexts         []*Context
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   string
+	}{
+		{
+			name: "Summary returns string with contexts and projects combined",
+			fields: fields{
+				Owner: "org1",
+				ProjectVariables: []*ProjectVariable{
+					{
+						Project: "prj1",
+					},
+					{
+						Project: "prj2",
+					},
+				},
+				Contexts: []*Context{
+					{
+						Name: "ctx1",
+					},
+					{
+						Name: "ctx2",
+					},
+				},
+			},
+			want: "owner: org1, contexts: ctx1, ctx2, projects: prj1, prj2",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &Spec{
+				Owner:            tt.fields.Owner,
+				ProjectVariables: tt.fields.ProjectVariables,
+				Contexts:         tt.fields.Contexts,
+			}
+			if got := s.Summary(); got != tt.want {
+				t.Errorf("Spec.Summary() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestSpec_UpdateProjectVariables(t *testing.T) {
 	type fields struct {
 		Owner            string

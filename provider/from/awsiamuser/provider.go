@@ -59,6 +59,10 @@ type Spec struct {
 	Logger        log.FieldLogger
 }
 
+func (s *Spec) Summary() string {
+	return fmt.Sprintf("account: %s, username: %s", s.AccountID, s.Username)
+}
+
 func (s *Spec) buildClient(ctx context.Context) (IAMAccessKeyAPI, error) {
 	if s.Client != nil {
 		return s.Client, nil

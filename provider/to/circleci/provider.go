@@ -2,7 +2,9 @@ package circleci
 
 import (
 	"context"
+	"fmt"
 	"os"
+	"strings"
 
 	"github.com/goccy/go-yaml"
 	"github.com/grezar/go-circleci"
@@ -62,6 +64,28 @@ type Context struct {
 type Variable struct {
 	Name  string `yaml:"name"`
 	Value string `yaml:"value"`
+}
+
+func (s *Spec) Summary() string {
+	summary := fmt.Sprintf("owner: %s", s.Owner)
+
+	if len(s.Contexts) > 0 {
+		var contexts []string
+		for _, c := range s.Contexts {
+			contexts = append(contexts, c.Name)
+		}
+		summary += fmt.Sprintf(", contexts: %s", strings.Join(contexts, ", "))
+	}
+
+	if len(s.ProjectVariables) > 0 {
+		var projectVariables []string
+		for _, pv := range s.ProjectVariables {
+			projectVariables = append(projectVariables, pv.Project)
+		}
+		summary += fmt.Sprintf(", projects: %s", strings.Join(projectVariables, ", "))
+	}
+
+	return summary
 }
 
 func (s *Spec) buildClient() (*circleci.Client, error) {

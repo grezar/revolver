@@ -3,6 +3,7 @@ package awssharedcredentials
 import (
 	"bufio"
 	"context"
+	"fmt"
 	"os"
 
 	"github.com/goccy/go-yaml"
@@ -51,6 +52,10 @@ type Spec struct {
 	Profile string `yaml:"profile"`
 	Secrets map[string]string
 	Logger  log.FieldLogger
+}
+
+func (s *Spec) Summary() string {
+	return fmt.Sprintf("path: %s, profile: %s", s.Path, s.Profile)
 }
 
 // Do implements toprovider.Operator interface

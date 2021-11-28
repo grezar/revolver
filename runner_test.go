@@ -8,6 +8,7 @@ import (
 	"github.com/golang/mock/gomock"
 	mockedfp "github.com/grezar/revolver/provider/from/mocks"
 	mockedtp "github.com/grezar/revolver/provider/to/mocks"
+	"github.com/grezar/revolver/reporting"
 	"github.com/grezar/revolver/schema"
 	"github.com/grezar/revolver/secrets"
 )
@@ -39,8 +40,10 @@ func TestRunner_Run(t *testing.T) {
 
 					mockedFromOperator := mockedfp.NewMockOperator(ctrl)
 					mockedToOperator := mockedtp.NewMockOperator(ctrl)
+					mockedFromOperator.EXPECT().Summary().Return("mocked from operator")
 					mockedFromOperator.EXPECT().Do(ctx).Return(expectedSecrets, nil)
 					ctx = secrets.WithSecrets(ctx, expectedSecrets)
+					mockedToOperator.EXPECT().Summary().Return("mocked to operator")
 					mockedToOperator.EXPECT().Do(ctx)
 					mockedFromOperator.EXPECT().Cleanup(ctx)
 
@@ -76,6 +79,7 @@ func TestRunner_Run(t *testing.T) {
 					expectedSecrets := secrets.Secrets{}
 
 					mockedFromOperator := mockedfp.NewMockOperator(ctrl)
+					mockedFromOperator.EXPECT().Summary().Return("mocked from operator")
 					mockedFromOperator.EXPECT().Do(ctx).Return(expectedSecrets, nil)
 
 					rotations := []*schema.Rotation{
@@ -102,6 +106,7 @@ func TestRunner_Run(t *testing.T) {
 					ctx := context.Background()
 
 					mockedFromOperator := mockedfp.NewMockOperator(ctrl)
+					mockedFromOperator.EXPECT().Summary().Return("mocked from operator")
 					mockedFromOperator.EXPECT().Do(ctx).Return(nil, errFakeRunnerTest)
 
 					rotations := []*schema.Rotation{
@@ -132,9 +137,12 @@ func TestRunner_Run(t *testing.T) {
 
 					mockedFromOperator := mockedfp.NewMockOperator(ctrl)
 					mockedToOperator := mockedtp.NewMockOperator(ctrl)
+					mockedFromOperator.EXPECT().Summary().Return("mocked from operator")
 					mockedFromOperator.EXPECT().Do(ctx).Return(expectedSecrets, nil)
 					ctx = secrets.WithSecrets(ctx, expectedSecrets)
+					mockedToOperator.EXPECT().Summary().Return("mocked to operator")
 					mockedToOperator.EXPECT().Do(ctx).Return(errFakeRunnerTest)
+					mockedToOperator.EXPECT().Summary().Return("mocked to operator")
 					mockedToOperator.EXPECT().Do(ctx).Return(nil)
 					mockedFromOperator.EXPECT().Cleanup(ctx)
 
@@ -174,7 +182,9 @@ func TestRunner_Run(t *testing.T) {
 				rotations: tt.fields.mockedRotations(t, ctrl),
 			}
 
-			r.Run()
+			reporting.Run(func (rptr *reporting.R) {
+				r.Run(rptr)
+			})
 		})
 	}
 }
