@@ -29,7 +29,7 @@ func (u *Stdin) Name() string {
 }
 
 func (s *Spec) Summary() string {
-	return fmt.Sprintf("")
+	return "receive the input from stdin"
 }
 
 func (u *Stdin) UnmarshalSpec(bytes []byte) (fromprovider.Operator, error) {
