@@ -96,12 +96,33 @@ revolver rotate --config rotations.yaml
 
 ## Providers
 * From
+  * [Stdin](#from-stdin)
   * [AWSIAMUSer](#from-awsiamuser)
 
 * To
+  * [Stdout](#to-stdout)
   * [AWSSharedCredentials](#to-awssharedcredentials)
   * [Tfe](#to-tfe)
   * [CircleCI](#to-circleci)
+
+<a name="from-stdin"></a>
+### From/Stdin
+From/Stdin is a provider to receive input from stdin.
+
+### Example
+```
+from:
+  provider: Stdin
+```
+
+```
+echo -n "something" | revolver rotate --config stdin.yaml
+```
+
+### Spec
+There's no specification. If it's used with an interactive shell, stdin will show a
+prompt waiting for input from the user, otherwise, it will read input from a stream
+like a pipe.
 
 <a name="from-awsiamuser"></a>
 ### From/AWSIAMUser
@@ -130,6 +151,22 @@ https://aws.github.io/aws-sdk-go-v2/docs/configuring-sdk/
 #### Secrets
 - `.AWSAccessKeyID` - ID of AWS IAM User access key
 - `.AWSSecretAccessKey` - Secret key of AWS IAM User access key
+
+<a name="to-stdout"></a>
+### To/Stdout
+To/Stdout is a provider for outputting something to the stdout
+
+#### Example
+```
+  to:
+    - provider: Stdout
+      spec:
+        output: |
+          say something
+```
+
+#### Spec
+- `output` - Text to output. You can use Go Template here. Multiple lines are allowed.
 
 <a name="to-awssharedcredentials"></a>
 ### To/AWSSharedCredentials
