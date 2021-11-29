@@ -40,7 +40,7 @@ type Spec struct {
 }
 
 func (s *Spec) Summary() string {
-	return fmt.Sprintf("output to stdout")
+	return "output to stdout"
 }
 
 // Do implements toprovider.Operator interface
