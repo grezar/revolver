@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/grezar/revolver"
+	"github.com/grezar/revolver/reporting"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )
@@ -27,7 +28,9 @@ func main() {
 					if err != nil {
 						return err
 					}
-					runner.Run()
+					reporting.Run(func (rptr *reporting.R){
+						runner.Run(rptr)
+					})
 					return nil
 				},
 			},

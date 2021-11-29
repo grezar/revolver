@@ -3,6 +3,7 @@ package tfe
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 
 	"github.com/goccy/go-yaml"
@@ -61,6 +62,10 @@ type Secret struct {
 	Name     string `yaml:"name" validate:"required"`
 	Value    string `yaml:"value" validate:"required"`
 	Category string `yaml:"category"`
+}
+
+func (s *Spec) Summary() string {
+	return fmt.Sprintf("organization: %s, workspace: %s", s.Organization, s.Workspace)
 }
 
 func (s *Spec) buildClient() (*tfe.Client, error) {
