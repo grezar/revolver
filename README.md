@@ -96,6 +96,7 @@ revolver rotate --config rotations.yaml
 
 ## Providers
 * From
+  * [Stdin](#from-stdin)
   * [AWSIAMUSer](#from-awsiamuser)
 
 * To
@@ -103,6 +104,25 @@ revolver rotate --config rotations.yaml
   * [AWSSharedCredentials](#to-awssharedcredentials)
   * [Tfe](#to-tfe)
   * [CircleCI](#to-circleci)
+
+<a name="from-stdin"></a>
+### From/Stdin
+From/Stdin is a provider to receive input from stdin.
+
+### Example
+```
+from:
+  provider: Stdin
+```
+
+```
+echo -n "something" | revolver rotate --config stdin.yaml
+```
+
+### Spec
+There's no specification. If it's used with an interactive shell, stdin will show a
+prompt waiting for input from the user, otherwise, it will read input from a stream
+like a pipe.
 
 <a name="from-awsiamuser"></a>
 ### From/AWSIAMUser
