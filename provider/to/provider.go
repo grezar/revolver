@@ -21,5 +21,6 @@ type Provider interface {
 }
 
 type Operator interface {
+	Summary() string
 	Do(ctx context.Context) error
 }

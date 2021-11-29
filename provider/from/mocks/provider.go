@@ -116,3 +116,17 @@ func (mr *MockOperatorMockRecorder) Do(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Do", reflect.TypeOf((*MockOperator)(nil).Do), ctx)
 }
+
+// Summary mocks base method.
+func (m *MockOperator) Summary() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Summary")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// Summary indicates an expected call of Summary.
+func (mr *MockOperatorMockRecorder) Summary() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Summary", reflect.TypeOf((*MockOperator)(nil).Summary))
+}
