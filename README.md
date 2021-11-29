@@ -99,6 +99,7 @@ revolver rotate --config rotations.yaml
   * [AWSIAMUSer](#from-awsiamuser)
 
 * To
+  * [Stdout](#to-stdout)
   * [AWSSharedCredentials](#to-awssharedcredentials)
   * [Tfe](#to-tfe)
   * [CircleCI](#to-circleci)
@@ -130,6 +131,22 @@ https://aws.github.io/aws-sdk-go-v2/docs/configuring-sdk/
 #### Secrets
 - `.AWSAccessKeyID` - ID of AWS IAM User access key
 - `.AWSSecretAccessKey` - Secret key of AWS IAM User access key
+
+<a name="to-stdout"></a>
+### To/Stdout
+To/Stdout is a provider for outputting something to the stdout
+
+#### Example
+```
+  to:
+    - provider: Stdout
+      spec:
+        output: |
+          say something
+```
+
+#### Spec
+- `output` - Text to output. You can use Go Template here. Multiple lines are allowed.
 
 <a name="to-awssharedcredentials"></a>
 ### To/AWSSharedCredentials
