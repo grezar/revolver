@@ -33,20 +33,21 @@ You can use YAML to specify the resource from which the key will be issued and t
 ```
 
 ## Motivation
-It is recommended as a best practice from a security perspective that secrets such as IAM User access keys be rotated periodically.
-On the other hand, it is very tedious to create a new key,
-update it with the new key in the environment using the secret,
-and then delete the old key, and in fact the cost of key rotation is not small.
-We cannot afford not to automate this tedious but necessary task.
-This tool automates key rotation, i.e., it updates the key and automatically updates the secret
-so that the newly created key can be used in the environment where the key is used.
+It is recommended as a best practice from a security perspective that secrets
+such as IAM User access keys be rotated periodically. On the other hand, it is
+very tedious to create a new key, update it with the new key in the environment
+using the secret, and then delete the old key, and in fact the cost of key
+rotation is not small. We cannot afford not to automate this tedious but
+necessary task. This tool automates key rotation, i.e., it updates the key and
+automatically updates the secret so that the newly created key can be used in
+the environment where the key is used, and cleanup the old secret key.
 
 One possible scenario is that you are using an AWS IAM User access key in CircleCI or Terraform Cloud, etc.
 In this case, the tasks required for key rotation are
 
-1. issue a new AWS IAM User access key
-2. update the IAM User access key stored in CircleCI or Terraform Cloud to the newly created one.
-3. delete the old AWS IAM User access key
+1. Issue a new AWS IAM User access key
+2. Update the IAM User access key stored in CircleCI or Terraform Cloud to the newly created one.
+3. Delete the old AWS IAM User access key
 
 This is what it will look like.
 Revolver is a tool to automate exactly this operation.
