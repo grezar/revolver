@@ -207,10 +207,10 @@ func TestSpec_UpdateiContexts(t *testing.T) {
 					}).Return(&circleci.ContextList{
 						Items: []*circleci.Context{},
 					}, nil)
-					mock.EXPECT().AddOrUpdateVariable(ctx, "", "SECRET1", circleci.AddOrUpdateVariableOptions{
+					mock.EXPECT().AddOrUpdateVariable(ctx, "", "SECRET1", circleci.ContextAddOrUpdateVariableOptions{
 						Value: circleci.String("111"),
 					})
-					mock.EXPECT().AddOrUpdateVariable(ctx, "", "SECRET2", circleci.AddOrUpdateVariableOptions{
+					mock.EXPECT().AddOrUpdateVariable(ctx, "", "SECRET2", circleci.ContextAddOrUpdateVariableOptions{
 						Value: circleci.String("222"),
 					})
 					return mock
@@ -247,7 +247,7 @@ func TestSpec_UpdateiContexts(t *testing.T) {
 							},
 						},
 					}, nil)
-					mock.EXPECT().AddOrUpdateVariable(ctx, "ctx-1", "SECRET1", circleci.AddOrUpdateVariableOptions{
+					mock.EXPECT().AddOrUpdateVariable(ctx, "ctx-1", "SECRET1", circleci.ContextAddOrUpdateVariableOptions{
 						Value: circleci.String("111"),
 					})
 					return mock
