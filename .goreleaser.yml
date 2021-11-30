@@ -4,7 +4,7 @@ before:
   hooks:
     - go mod tidy
 builds:
-  - main: .
+  - main: ./cmd/revolver
     binary: revolver
     ldflags:
       - -s -w
