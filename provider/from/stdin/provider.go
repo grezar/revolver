@@ -2,7 +2,7 @@ package stdin
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"io"
 	"os"
 
@@ -46,8 +46,7 @@ type Spec struct{}
 func (s *Spec) Do(ctx context.Context) (secrets.Secrets, error) {
 	var input string
 	if isatty.IsTerminal(os.Stdin.Fd()) {
-		fmt.Printf("Input for the Stdin provider: ")
-		fmt.Scan(&input)
+		return nil, errors.New("Stdin provider does not support input from a terminal")
 	} else {
 		bytes, err := io.ReadAll(os.Stdin)
 		if err != nil {
