@@ -59,14 +59,12 @@ func (r *Runner) Run(rptr *reporting.R) {
 
 			// Ensure that the cleanup process is invoked when the provider's Do
 			// operation succeeds
-			if len(secrets.GetSecrets(ctx)) > 0 {
-				defer func() {
-					err := rn.From.Spec.Cleanup(ctx)
-					if err != nil {
-						rptr.Fail(err)
-					}
-				}()
-			}
+			defer func() {
+				err := rn.From.Spec.Cleanup(ctx)
+				if err != nil {
+					rptr.Fail(err)
+				}
+			}()
 
 			for _, to := range rn.To {
 				rptr.Run(fmt.Sprintf("To/%s", to.Provider), func(rptr *reporting.R) {
