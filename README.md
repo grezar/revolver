@@ -120,9 +120,7 @@ echo -n "something" | revolver rotate --config stdin.yaml
 ```
 
 ### Spec
-There's no specification. If it's used with an interactive shell, stdin will show a
-prompt waiting for input from the user, otherwise, it will read input from a stream
-like a pipe.
+There's no specification. It will read input from a stream, like a pipe.
 
 <a name="from-awsiamuser"></a>
 ### From/AWSIAMUser
