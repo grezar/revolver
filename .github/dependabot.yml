@@ -9,8 +9,6 @@ updates:
     commit-message:
       prefix: "chore"
       include: "scope"
-    lables:
-      - "dependencies"
     assignees:
       - "grezar"
   - package-ecosystem: "gomod"
@@ -22,7 +20,5 @@ updates:
     commit-message:
       prefix: "chore"
       include: "scope"
-    lables:
-      - "dependencies"
     assignees:
       - "grezar"
