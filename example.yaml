@@ -1,0 +1,8 @@
+- name: Stdin
+  from:
+    provider: Stdin
+  to:
+    - provider: Stdout
+      spec:
+        output: |
+          Say {{ .Input }}
