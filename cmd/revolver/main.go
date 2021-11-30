@@ -28,7 +28,7 @@ func main() {
 					if err != nil {
 						return err
 					}
-					reporting.Run(func (rptr *reporting.R){
+					reporting.Run(func(rptr *reporting.R) {
 						runner.Run(rptr)
 					})
 					return nil

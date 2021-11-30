@@ -182,7 +182,7 @@ func TestRunner_Run(t *testing.T) {
 				rotations: tt.fields.mockedRotations(t, ctrl),
 			}
 
-			reporting.Run(func (rptr *reporting.R) {
+			reporting.Run(func(rptr *reporting.R) {
 				r.Run(rptr)
 			})
 		})
