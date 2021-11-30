@@ -87,5 +87,4 @@ func (r *Runner) Run(rptr *reporting.R) {
 			}
 		})
 	}
-	rptr.Render()
 }
