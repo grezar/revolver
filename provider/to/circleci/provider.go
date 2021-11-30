@@ -201,7 +201,7 @@ func (s *Spec) UpdateContexts(ctx context.Context, api *circleci.Client) error {
 				return err
 			}
 
-			_, err = api.Contexts.AddOrUpdateVariable(ctx, contextID, v.Name, circleci.AddOrUpdateVariableOptions{
+			_, err = api.Contexts.AddOrUpdateVariable(ctx, contextID, v.Name, circleci.ContextAddOrUpdateVariableOptions{
 				Value: circleci.String(variableValue),
 			})
 			if err != nil {
