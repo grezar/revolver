@@ -81,6 +81,7 @@ func TestRunner_Run(t *testing.T) {
 					mockedFromOperator := mockedfp.NewMockOperator(ctrl)
 					mockedFromOperator.EXPECT().Summary().Return("mocked from operator")
 					mockedFromOperator.EXPECT().Do(ctx).Return(expectedSecrets, nil)
+					mockedFromOperator.EXPECT().Cleanup(ctx)
 
 					rotations := []*schema.Rotation{
 						{
@@ -108,6 +109,7 @@ func TestRunner_Run(t *testing.T) {
 					mockedFromOperator := mockedfp.NewMockOperator(ctrl)
 					mockedFromOperator.EXPECT().Summary().Return("mocked from operator")
 					mockedFromOperator.EXPECT().Do(ctx).Return(nil, errFakeRunnerTest)
+					mockedFromOperator.EXPECT().Cleanup(ctx)
 
 					rotations := []*schema.Rotation{
 						{
