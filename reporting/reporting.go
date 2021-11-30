@@ -23,6 +23,7 @@ func Run(f func(r *R)) {
 	}
 	go rRunner(r, f)
 	<-r.done
+	r.Render()
 }
 
 type R struct {
@@ -75,6 +76,7 @@ func rRunner(r *R, fn func(r *R)) {
 			// report. See comment in Run method.
 			r.context.release()
 		}
+
 		r.done <- true
 	}()
 
