@@ -16,7 +16,7 @@ require (
 	github.com/sirupsen/logrus v1.8.1
 	github.com/urfave/cli/v2 v2.3.0
 	github.com/xhit/go-str2duration/v2 v2.0.0
-	gopkg.in/ini.v1 v1.66.0
+	gopkg.in/ini.v1 v1.66.2
 )
 
 require (
