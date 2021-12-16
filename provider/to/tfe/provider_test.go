@@ -7,14 +7,15 @@ import (
 
 	"github.com/golang/mock/gomock"
 	tfe "github.com/hashicorp/go-tfe"
+	"github.com/hashicorp/go-tfe/mocks"
 	log "github.com/sirupsen/logrus"
 )
 
-func defaultWorkspaces(t *testing.T, ctrl *gomock.Controller, organization string, workspace string, workspaceID string) *tfe.MockWorkspaces {
+func defaultWorkspaces(t *testing.T, ctrl *gomock.Controller, organization string, workspace string, workspaceID string) *mocks.MockWorkspaces {
 	t.Helper()
 
 	ctx := context.Background()
-	mock := tfe.NewMockWorkspaces(ctrl)
+	mock := mocks.NewMockWorkspaces(ctrl)
 	mock.EXPECT().
 		List(ctx, organization, tfe.WorkspaceListOptions{
 			Search: tfe.String(workspace),
@@ -34,8 +35,8 @@ func TestSpec_Do(t *testing.T) {
 		Organization string
 		Workspace    string
 		Secrets      []Secret
-		Variables    func(t *testing.T, ctrl *gomock.Controller, workspaceID string) *tfe.MockVariables
-		Workspaces   func(t *testing.T, ctrl *gomock.Controller, organization string, workspace string, workspaceID string) *tfe.MockWorkspaces
+		Variables    func(t *testing.T, ctrl *gomock.Controller, workspaceID string) *mocks.MockVariables
+		Workspaces   func(t *testing.T, ctrl *gomock.Controller, organization string, workspace string, workspaceID string) *mocks.MockWorkspaces
 	}
 	tests := []struct {
 		name    string
@@ -59,11 +60,11 @@ func TestSpec_Do(t *testing.T) {
 						Category: "env",
 					},
 				},
-				Variables: func(t *testing.T, ctrl *gomock.Controller, workspaceID string) *tfe.MockVariables {
+				Variables: func(t *testing.T, ctrl *gomock.Controller, workspaceID string) *mocks.MockVariables {
 					t.Helper()
 
 					ctx := context.Background()
-					mock := tfe.NewMockVariables(ctrl)
+					mock := mocks.NewMockVariables(ctrl)
 					mock.EXPECT().List(ctx, workspaceID, tfe.VariableListOptions{}).Return(&tfe.VariableList{
 						Pagination: &tfe.Pagination{
 							NextPage:    0,
@@ -107,11 +108,11 @@ func TestSpec_Do(t *testing.T) {
 						Category: "terraform",
 					},
 				},
-				Variables: func(t *testing.T, ctrl *gomock.Controller, workspaceID string) *tfe.MockVariables {
+				Variables: func(t *testing.T, ctrl *gomock.Controller, workspaceID string) *mocks.MockVariables {
 					t.Helper()
 
 					ctx := context.Background()
-					mock := tfe.NewMockVariables(ctrl)
+					mock := mocks.NewMockVariables(ctrl)
 					mock.EXPECT().List(ctx, workspaceID, tfe.VariableListOptions{}).Return(&tfe.VariableList{
 						Pagination: &tfe.Pagination{
 							NextPage:    0,
@@ -150,11 +151,11 @@ func TestSpec_Do(t *testing.T) {
 						Category: "unknown",
 					},
 				},
-				Variables: func(t *testing.T, ctrl *gomock.Controller, workspaceID string) *tfe.MockVariables {
+				Variables: func(t *testing.T, ctrl *gomock.Controller, workspaceID string) *mocks.MockVariables {
 					t.Helper()
 
 					ctx := context.Background()
-					mock := tfe.NewMockVariables(ctrl)
+					mock := mocks.NewMockVariables(ctrl)
 					mock.EXPECT().List(ctx, workspaceID, tfe.VariableListOptions{}).Return(&tfe.VariableList{
 						Pagination: &tfe.Pagination{
 							NextPage:    0,
@@ -180,12 +181,12 @@ func TestSpec_Do(t *testing.T) {
 						Category: "env",
 					},
 				},
-				Variables: func(t *testing.T, ctrl *gomock.Controller, workspaceID string) *tfe.MockVariables {
+				Variables: func(t *testing.T, ctrl *gomock.Controller, workspaceID string) *mocks.MockVariables {
 					t.Helper()
 
 					ctx := context.Background()
 					variableID := "var-1"
-					mock := tfe.NewMockVariables(ctrl)
+					mock := mocks.NewMockVariables(ctrl)
 					mock.EXPECT().List(ctx, workspaceID, tfe.VariableListOptions{}).Return(&tfe.VariableList{
 						Pagination: &tfe.Pagination{
 							NextPage:    1,
@@ -223,12 +224,12 @@ func TestSpec_Do(t *testing.T) {
 						Category: "terraform",
 					},
 				},
-				Variables: func(t *testing.T, ctrl *gomock.Controller, workspaceID string) *tfe.MockVariables {
+				Variables: func(t *testing.T, ctrl *gomock.Controller, workspaceID string) *mocks.MockVariables {
 					t.Helper()
 
 					ctx := context.Background()
 					variableID := "var-1"
-					mock := tfe.NewMockVariables(ctrl)
+					mock := mocks.NewMockVariables(ctrl)
 					mock.EXPECT().List(ctx, workspaceID, tfe.VariableListOptions{}).Return(&tfe.VariableList{
 						Pagination: &tfe.Pagination{
 							NextPage:    1,
@@ -266,17 +267,17 @@ func TestSpec_Do(t *testing.T) {
 						Category: "terraform",
 					},
 				},
-				Variables: func(t *testing.T, ctrl *gomock.Controller, workspaceID string) *tfe.MockVariables {
+				Variables: func(t *testing.T, ctrl *gomock.Controller, workspaceID string) *mocks.MockVariables {
 					t.Helper()
 
-					mock := tfe.NewMockVariables(ctrl)
+					mock := mocks.NewMockVariables(ctrl)
 					return mock
 				},
-				Workspaces: func(t *testing.T, ctrl *gomock.Controller, organization string, workspace string, workspaceID string) *tfe.MockWorkspaces {
+				Workspaces: func(t *testing.T, ctrl *gomock.Controller, organization string, workspace string, workspaceID string) *mocks.MockWorkspaces {
 					t.Helper()
 
 					ctx := context.Background()
-					mock := tfe.NewMockWorkspaces(ctrl)
+					mock := mocks.NewMockWorkspaces(ctrl)
 					mock.EXPECT().
 						List(ctx, organization, tfe.WorkspaceListOptions{
 							Search: tfe.String(workspace),
