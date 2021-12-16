@@ -168,10 +168,15 @@ func (s *Spec) UpdateProjectVariables(ctx context.Context, api *circleci.Client)
 
 func (s *Spec) UpdateContexts(ctx context.Context, api *circleci.Client) error {
 	var contexts []*circleci.Context
+	var err error
+	cl := &circleci.ContextList{
+		NextPageToken: "",
+	}
 
 	for {
-		cl, err := api.Contexts.List(ctx, circleci.ContextListOptions{
+		cl, err = api.Contexts.List(ctx, circleci.ContextListOptions{
 			OwnerSlug: circleci.String(s.Owner),
+			PageToken: circleci.String(cl.NextPageToken),
 		})
 		if err != nil {
 			return err
