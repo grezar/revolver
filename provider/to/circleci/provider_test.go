@@ -204,6 +204,7 @@ func TestSpec_UpdateiContexts(t *testing.T) {
 					mock := mock.NewMockContexts(ctrl)
 					mock.EXPECT().List(ctx, circleci.ContextListOptions{
 						OwnerSlug: circleci.String("org1"),
+						PageToken: circleci.String(""),
 					}).Return(&circleci.ContextList{
 						Items: []*circleci.Context{},
 					}, nil)
@@ -239,6 +240,7 @@ func TestSpec_UpdateiContexts(t *testing.T) {
 					mock := mock.NewMockContexts(ctrl)
 					mock.EXPECT().List(ctx, circleci.ContextListOptions{
 						OwnerSlug: circleci.String("org1"),
+						PageToken: circleci.String(""),
 					}).Return(&circleci.ContextList{
 						Items: []*circleci.Context{
 							{
