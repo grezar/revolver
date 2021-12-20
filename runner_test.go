@@ -138,14 +138,15 @@ func TestRunner_Run(t *testing.T) {
 					}
 
 					mockedFromOperator := mockedfp.NewMockOperator(ctrl)
-					mockedToOperator := mockedtp.NewMockOperator(ctrl)
+					mockedToOperator1 := mockedtp.NewMockOperator(ctrl)
+					mockedToOperator2 := mockedtp.NewMockOperator(ctrl)
 					mockedFromOperator.EXPECT().Summary().Return("mocked from operator")
 					mockedFromOperator.EXPECT().Do(ctx).Return(expectedSecrets, nil)
 					ctx = secrets.WithSecrets(ctx, expectedSecrets)
-					mockedToOperator.EXPECT().Summary().Return("mocked to operator")
-					mockedToOperator.EXPECT().Do(ctx).Return(errFakeRunnerTest)
-					mockedToOperator.EXPECT().Summary().Return("mocked to operator")
-					mockedToOperator.EXPECT().Do(ctx).Return(nil)
+					mockedToOperator1.EXPECT().Summary().Return("mocked to operator 1")
+					mockedToOperator1.EXPECT().Do(ctx).Return(errFakeRunnerTest)
+					mockedToOperator2.EXPECT().Summary().Return("mocked to operator 2")
+					mockedToOperator2.EXPECT().Do(ctx).Return(nil)
 					mockedFromOperator.EXPECT().Cleanup(ctx)
 
 					rotations := []*schema.Rotation{
@@ -159,12 +160,12 @@ func TestRunner_Run(t *testing.T) {
 							To: []*schema.To{
 								{
 									Spec: schema.ToProviderSpec{
-										Operator: mockedToOperator,
+										Operator: mockedToOperator1,
 									},
 								},
 								{
 									Spec: schema.ToProviderSpec{
-										Operator: mockedToOperator,
+										Operator: mockedToOperator2,
 									},
 								},
 							},
