@@ -3,6 +3,25 @@
 [![Go Tests](https://github.com/grezar/revolver/actions/workflows/ci.yml/badge.svg)](https://github.com/grezar/revolver/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+## Installation
+Revolver provides its binaries in GitHub Release where you can download the
+appropriate one for your platform.
+
+### Linux
+```
+curl -L https://github.com/grezar/revolver/releases/download/${REVOLVER_VERSION}/revolver_linux_x86_64.tar.gz | tar xzv
+```
+
+### OS X
+```
+curl -L https://github.com/grezar/revolver/releases/download/${REVOLVER_VERSION}/revolver_darwin_x86_64.tar.gz | tar xzv
+```
+
+Or, you can use *go install*, instead.
+```
+go install github.com/grezar/revolver/cmd/revolver@latest
+```
+
 ## Overview
 Revolver is a CLI-based tool for automating typical key rotation operations written in Go.
 
