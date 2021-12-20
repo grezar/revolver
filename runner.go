@@ -38,6 +38,7 @@ func NewRunner(path string) (*Runner, error) {
 
 func (r *Runner) Run(rptr *reporting.R) {
 	for _, rn := range r.rotations {
+		rn := rn
 		rptr.Run(rn.Name, func(rptr *reporting.R) {
 			rptr.Parallel()
 			ctx := context.Background()
@@ -67,6 +68,7 @@ func (r *Runner) Run(rptr *reporting.R) {
 			}()
 
 			for _, to := range rn.To {
+				to := to
 				rptr.Run(fmt.Sprintf("To/%s", to.Provider), func(rptr *reporting.R) {
 					rptr.Parallel()
 					rptr.Summary(to.Spec.Operator.Summary())
