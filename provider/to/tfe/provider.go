@@ -10,7 +10,6 @@ import (
 	toprovider "github.com/grezar/revolver/provider/to"
 	"github.com/grezar/revolver/secrets"
 	tfe "github.com/hashicorp/go-tfe"
-	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -43,9 +42,6 @@ func (t *Tfe) UnmarshalSpec(bytes []byte) (toprovider.Operator, error) {
 	if err := yaml.Unmarshal(bytes, &s); err != nil {
 		return nil, err
 	}
-	s.Logger = log.WithFields(log.Fields{
-		"provider": name,
-	})
 	return &s, nil
 }
 
@@ -55,7 +51,6 @@ type Spec struct {
 	Workspace    string `yaml:"workspace" validate:"required"`
 	Secrets      []Secret
 	Client       *tfe.Client
-	Logger       log.FieldLogger
 }
 
 type Secret struct {
@@ -130,8 +125,6 @@ func (s *Spec) Do(ctx context.Context) error {
 
 		wv := workspaceVariableList[secret.Name]
 		if wv != nil && (categoryType == wv.Category) {
-			s.Logger.Infof("Update %s on the workspace %s", secret.Name, s.Workspace)
-
 			_, err := api.Variables.Update(ctx, workspaceID, wv.ID, tfe.VariableUpdateOptions{
 				Key:       tfe.String(secret.Name),
 				Value:     tfe.String(secretValue),
@@ -141,8 +134,6 @@ func (s *Spec) Do(ctx context.Context) error {
 				return err
 			}
 		} else {
-			s.Logger.Infof("Create %s on the workspace %s", secret.Name, s.Workspace)
-
 			_, err := api.Variables.Create(ctx, workspaceID, tfe.VariableCreateOptions{
 				Key:       tfe.String(secret.Name),
 				Value:     tfe.String(secretValue),
@@ -154,8 +145,6 @@ func (s *Spec) Do(ctx context.Context) error {
 			}
 		}
 	}
-	s.Logger.Info("Success.")
-
 	return nil
 }
 

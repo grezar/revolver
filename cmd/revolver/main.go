@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/grezar/revolver"
 	"github.com/grezar/revolver/reporting"
-	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )
 
