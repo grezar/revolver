@@ -53,7 +53,7 @@ func (s *Spec) Summary() string {
 }
 
 // Do implements toprovider.Operator interface
-func (s *Spec) Do(ctx context.Context) error {
+func (s *Spec) Do(ctx context.Context, dryRun bool) error {
 	c, err := ini.Load(s.Path)
 	if err != nil {
 		return err
@@ -67,20 +67,22 @@ func (s *Spec) Do(ctx context.Context) error {
 		c.Section(s.Profile).Key(k).SetValue(secret)
 	}
 
-	f, err := os.Create(s.Path)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
+	if !dryRun {
+		f, err := os.Create(s.Path)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
 
-	w := bufio.NewWriter(f)
-	_, err = c.WriteTo(w)
-	if err != nil {
-		return err
-	}
-	err = w.Flush()
-	if err != nil {
-		return err
+		w := bufio.NewWriter(f)
+		_, err = c.WriteTo(w)
+		if err != nil {
+			return err
+		}
+		err = w.Flush()
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

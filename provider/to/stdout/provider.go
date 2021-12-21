@@ -44,7 +44,7 @@ func (s *Spec) Summary() string {
 }
 
 // Do implements toprovider.Operator interface
-func (s *Spec) Do(ctx context.Context) error {
+func (s *Spec) Do(ctx context.Context, dryRun bool) error {
 	output, err := secrets.ExecuteTemplate(ctx, s.Output)
 	if err != nil {
 		return err

@@ -96,7 +96,7 @@ func (s *Spec) buildClient() (*circleci.Client, error) {
 }
 
 // Do implements toprovider.Operator interface
-func (s *Spec) Do(ctx context.Context) error {
+func (s *Spec) Do(ctx context.Context, dryRun bool) error {
 	api, err := s.buildClient()
 	if err != nil {
 		return err
@@ -104,7 +104,7 @@ func (s *Spec) Do(ctx context.Context) error {
 
 	// Update project variables if any
 	if len(s.ProjectVariables) > 0 {
-		err = s.UpdateProjectVariables(ctx, api)
+		err = s.UpdateProjectVariables(ctx, dryRun, api)
 		if err != nil {
 			return err
 		}
@@ -112,7 +112,7 @@ func (s *Spec) Do(ctx context.Context) error {
 
 	// Update context variables if any
 	if len(s.Contexts) > 0 {
-		err = s.UpdateContexts(ctx, api)
+		err = s.UpdateContexts(ctx, dryRun, api)
 		if err != nil {
 			return err
 		}
@@ -121,7 +121,7 @@ func (s *Spec) Do(ctx context.Context) error {
 	return nil
 }
 
-func (s *Spec) UpdateProjectVariables(ctx context.Context, api *circleci.Client) error {
+func (s *Spec) UpdateProjectVariables(ctx context.Context, dryRun bool, api *circleci.Client) error {
 	for _, pv := range s.ProjectVariables {
 		pvl, err := api.Projects.ListVariables(ctx, pv.Project)
 		if err != nil {
@@ -136,9 +136,11 @@ func (s *Spec) UpdateProjectVariables(ctx context.Context, api *circleci.Client)
 		for _, v := range pv.Variables {
 			// if the project variable already exists with the same name, delete it before creating a new one
 			if projectVariableList[v.Name] != nil {
-				err := api.Projects.DeleteVariable(ctx, pv.Project, v.Name)
-				if err != nil {
-					return err
+				if !dryRun {
+					err := api.Projects.DeleteVariable(ctx, pv.Project, v.Name)
+					if err != nil {
+						return err
+					}
 				}
 			}
 
@@ -147,12 +149,14 @@ func (s *Spec) UpdateProjectVariables(ctx context.Context, api *circleci.Client)
 				return err
 			}
 
-			_, err = api.Projects.CreateVariable(ctx, pv.Project, circleci.ProjectCreateVariableOptions{
-				Name:  circleci.String(v.Name),
-				Value: circleci.String(variableValue),
-			})
-			if err != nil {
-				return err
+			if !dryRun {
+				_, err = api.Projects.CreateVariable(ctx, pv.Project, circleci.ProjectCreateVariableOptions{
+					Name:  circleci.String(v.Name),
+					Value: circleci.String(variableValue),
+				})
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -160,7 +164,7 @@ func (s *Spec) UpdateProjectVariables(ctx context.Context, api *circleci.Client)
 	return nil
 }
 
-func (s *Spec) UpdateContexts(ctx context.Context, api *circleci.Client) error {
+func (s *Spec) UpdateContexts(ctx context.Context, dryRun bool, api *circleci.Client) error {
 	var contexts []*circleci.Context
 	var err error
 	cl := &circleci.ContextList{
@@ -200,11 +204,13 @@ func (s *Spec) UpdateContexts(ctx context.Context, api *circleci.Client) error {
 				return err
 			}
 
-			_, err = api.Contexts.AddOrUpdateVariable(ctx, contextID, v.Name, circleci.ContextAddOrUpdateVariableOptions{
-				Value: circleci.String(variableValue),
-			})
-			if err != nil {
-				return err
+			if !dryRun {
+				_, err = api.Contexts.AddOrUpdateVariable(ctx, contextID, v.Name, circleci.ContextAddOrUpdateVariableOptions{
+					Value: circleci.String(variableValue),
+				})
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}

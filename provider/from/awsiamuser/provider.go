@@ -69,7 +69,7 @@ func (s *Spec) buildClient(ctx context.Context) (IAMAccessKeyAPI, error) {
 	return iam.NewFromConfig(cfg), nil
 }
 
-func (s *Spec) Do(ctx context.Context) (secrets.Secrets, error) {
+func (s *Spec) Do(ctx context.Context, dryRun bool) (secrets.Secrets, error) {
 	client, err := s.buildClient(ctx)
 	if err != nil {
 		return nil, err
@@ -110,18 +110,23 @@ func (s *Spec) Do(ctx context.Context) (secrets.Secrets, error) {
 	input := &iam.CreateAccessKeyInput{
 		UserName: aws.String(s.Username),
 	}
-	output, err := CreateAccessKey(ctx, client, input)
-	if err != nil {
-		return nil, err
+
+	if !dryRun {
+		output, err := CreateAccessKey(ctx, client, input)
+		if err != nil {
+			return nil, err
+		}
+
+		return secrets.Secrets{
+			keyAWSAccessKeyID:     aws.ToString(output.AccessKey.AccessKeyId),
+			keyAWSSecretAccessKey: aws.ToString(output.AccessKey.SecretAccessKey),
+		}, nil
 	}
 
-	return secrets.Secrets{
-		keyAWSAccessKeyID:     aws.ToString(output.AccessKey.AccessKeyId),
-		keyAWSSecretAccessKey: aws.ToString(output.AccessKey.SecretAccessKey),
-	}, nil
+	return nil, nil
 }
 
-func (s *Spec) Cleanup(ctx context.Context) error {
+func (s *Spec) Cleanup(ctx context.Context, dryRun bool) error {
 	client, err := s.buildClient(ctx)
 	if err != nil {
 		return err
@@ -131,9 +136,11 @@ func (s *Spec) Cleanup(ctx context.Context) error {
 			AccessKeyId: k.AccessKeyId,
 			UserName:    k.UserName,
 		}
-		_, err := DeleteAccessKey(ctx, client, input)
-		if err != nil {
-			return err
+		if !dryRun {
+			_, err := DeleteAccessKey(ctx, client, input)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil

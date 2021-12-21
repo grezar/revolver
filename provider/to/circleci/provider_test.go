@@ -65,6 +65,7 @@ func TestSpec_UpdateProjectVariables(t *testing.T) {
 		ContextVariables []*Context
 		Projects         func(t *testing.T, ctrl *gomock.Controller) *mock.MockProjects
 		Contexts         func(t *testing.T, ctrl *gomock.Controller) *mock.MockContexts
+		dryRun           bool
 	}
 	tests := []struct {
 		name    string
@@ -112,6 +113,39 @@ func TestSpec_UpdateProjectVariables(t *testing.T) {
 			},
 		},
 		{
+			name: "Met conditions for creating new project variables but doesn't do destructive changes in dry-run mode",
+			fields: fields{
+				Owner: "org1",
+				ProjectVariables: []*ProjectVariable{
+					{
+						Project: "prj1",
+						Variables: []*Variable{
+							{
+								Name:  "SECRET1",
+								Value: "111",
+							},
+							{
+								Name:  "SECRET2",
+								Value: "222",
+							},
+						},
+					},
+				},
+				Projects: func(t *testing.T, ctrl *gomock.Controller) *mock.MockProjects {
+					t.Helper()
+
+					ctx := context.Background()
+					project := "prj1"
+					mock := mock.NewMockProjects(ctrl)
+					mock.EXPECT().ListVariables(ctx, project).Return(&circleci.ProjectVariableList{
+						Items: []*circleci.ProjectVariable{},
+					}, nil)
+					return mock
+				},
+				dryRun: true,
+			},
+		},
+		{
 			name: "Update an existing project variable by deleting it and creating a new one",
 			fields: fields{
 				Owner: "org1",
@@ -149,6 +183,40 @@ func TestSpec_UpdateProjectVariables(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "Met conditions for updating project variables but doesn't do destructive changes in dry-run mode",
+			fields: fields{
+				Owner: "org1",
+				ProjectVariables: []*ProjectVariable{
+					{
+						Project: "prj1",
+						Variables: []*Variable{
+							{
+								Name:  "SECRET1",
+								Value: "111",
+							},
+						},
+					},
+				},
+				Projects: func(t *testing.T, ctrl *gomock.Controller) *mock.MockProjects {
+					t.Helper()
+
+					ctx := context.Background()
+					project := "prj1"
+					mock := mock.NewMockProjects(ctrl)
+					mock.EXPECT().ListVariables(ctx, project).Return(&circleci.ProjectVariableList{
+						Items: []*circleci.ProjectVariable{
+							{
+								Name:  "SECRET1",
+								Value: "000",
+							},
+						},
+					}, nil)
+					return mock
+				},
+				dryRun: true,
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -160,7 +228,7 @@ func TestSpec_UpdateProjectVariables(t *testing.T) {
 				Owner:            tt.fields.Owner,
 				ProjectVariables: tt.fields.ProjectVariables,
 			}
-			if err := s.UpdateProjectVariables(context.Background(), mockCircleCIAPI); (err != nil) != tt.wantErr {
+			if err := s.UpdateProjectVariables(context.Background(), tt.fields.dryRun, mockCircleCIAPI); (err != nil) != tt.wantErr {
 				t.Errorf("Spec.UpdateContexts() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -172,6 +240,7 @@ func TestSpec_UpdateiContexts(t *testing.T) {
 		Owner            string
 		ContextVariables []*Context
 		Contexts         func(t *testing.T, ctrl *gomock.Controller) *mock.MockContexts
+		dryRun           bool
 	}
 	tests := []struct {
 		name    string
@@ -219,6 +288,41 @@ func TestSpec_UpdateiContexts(t *testing.T) {
 			},
 		},
 		{
+			name: "Met conditions for creating new context variables but doesn't do destructive changes in dry-run mode",
+			fields: fields{
+				Owner: "org1",
+				ContextVariables: []*Context{
+					{
+						Name: "ctx1",
+						Variables: []*Variable{
+							{
+								Name:  "SECRET1",
+								Value: "111",
+							},
+							{
+								Name:  "SECRET2",
+								Value: "222",
+							},
+						},
+					},
+				},
+				Contexts: func(t *testing.T, ctrl *gomock.Controller) *mock.MockContexts {
+					t.Helper()
+
+					ctx := context.Background()
+					mock := mock.NewMockContexts(ctrl)
+					mock.EXPECT().List(ctx, circleci.ContextListOptions{
+						OwnerSlug: circleci.String("org1"),
+						PageToken: circleci.String(""),
+					}).Return(&circleci.ContextList{
+						Items: []*circleci.Context{},
+					}, nil)
+					return mock
+				},
+				dryRun: true,
+			},
+		},
+		{
 			name: "Update an existing context variable",
 			fields: fields{
 				Owner: "org1",
@@ -256,6 +360,42 @@ func TestSpec_UpdateiContexts(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "Met conditions for updating an existing context variable but doesn't do destructive changes in dry-run mode",
+			fields: fields{
+				Owner: "org1",
+				ContextVariables: []*Context{
+					{
+						Name: "ctx1",
+						Variables: []*Variable{
+							{
+								Name:  "SECRET1",
+								Value: "111",
+							},
+						},
+					},
+				},
+				Contexts: func(t *testing.T, ctrl *gomock.Controller) *mock.MockContexts {
+					t.Helper()
+
+					ctx := context.Background()
+					mock := mock.NewMockContexts(ctrl)
+					mock.EXPECT().List(ctx, circleci.ContextListOptions{
+						OwnerSlug: circleci.String("org1"),
+						PageToken: circleci.String(""),
+					}).Return(&circleci.ContextList{
+						Items: []*circleci.Context{
+							{
+								ID:   "ctx-1",
+								Name: "ctx1",
+							},
+						},
+					}, nil)
+					return mock
+				},
+				dryRun: true,
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -267,7 +407,7 @@ func TestSpec_UpdateiContexts(t *testing.T) {
 				Owner:    tt.fields.Owner,
 				Contexts: tt.fields.ContextVariables,
 			}
-			if err := s.UpdateContexts(context.Background(), mockCircleCIAPI); (err != nil) != tt.wantErr {
+			if err := s.UpdateContexts(context.Background(), tt.fields.dryRun, mockCircleCIAPI); (err != nil) != tt.wantErr {
 				t.Errorf("Spec.UpdateContexts() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

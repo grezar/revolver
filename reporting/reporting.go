@@ -1,6 +1,7 @@
 package reporting
 
 import (
+	"fmt"
 	"os"
 	"runtime"
 	"sync"
@@ -39,6 +40,7 @@ type R struct {
 	context    *reportContext
 	barrier    chan bool
 	done       chan bool
+	dryRun     bool
 }
 
 func (r *R) Run(name string, f func(r *R)) {
@@ -145,7 +147,11 @@ func (r *R) Render() {
 	for _, rotation := range r.children {
 		rows = append(rows, []string{rotation.name, "", "", "", ""})
 		for _, provider := range rotation.children {
-			rows = append(rows, []string{"", provider.name, provider.status, provider.summary, provider.err})
+			status := provider.status
+			if r.dryRun {
+				status = fmt.Sprintf("DRYRUN/%s", status)
+			}
+			rows = append(rows, []string{"", provider.name, status, provider.summary, provider.err})
 		}
 	}
 
@@ -169,15 +175,19 @@ func (r *R) Render() {
 			bgColor = tablewriter.BgMagentaColor
 		case "SKIP":
 			bgColor = tablewriter.BgCyanColor
-		case "ERROR":
+		case "ERROR", "DRYRUN/ERROR":
 			bgColor = tablewriter.BgRedColor
-		case "SUCCESS":
+		case "SUCCESS", "DRYRUN/SUCCESS":
 			bgColor = tablewriter.BgGreenColor
 		}
 		table.Rich(row, []tablewriter.Colors{{}, {}, {tablewriter.FgHiBlackColor, tablewriter.Bold, bgColor}, {}})
 	}
 
 	table.Render()
+}
+
+func (r *R) DryRun() {
+	r.dryRun = true
 }
 
 func (r *R) Summary(summary string) {

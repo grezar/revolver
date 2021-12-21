@@ -43,7 +43,7 @@ func (u *Stdin) UnmarshalSpec(bytes []byte) (fromprovider.Operator, error) {
 // fromprovider.Operator
 type Spec struct{}
 
-func (s *Spec) Do(ctx context.Context) (secrets.Secrets, error) {
+func (s *Spec) Do(ctx context.Context, dryRun bool) (secrets.Secrets, error) {
 	var input string
 	if isatty.IsTerminal(os.Stdin.Fd()) {
 		return nil, errors.New("Stdin provider does not support input from a terminal")
@@ -59,7 +59,7 @@ func (s *Spec) Do(ctx context.Context) (secrets.Secrets, error) {
 	}, nil
 }
 
-func (s *Spec) Cleanup(ctx context.Context) error {
+func (s *Spec) Cleanup(ctx context.Context, dryRun bool) error {
 	// No thing to do
 	return nil
 }

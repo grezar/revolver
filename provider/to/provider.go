@@ -22,5 +22,5 @@ type Provider interface {
 
 type Operator interface {
 	Summary() string
-	Do(ctx context.Context) error
+	Do(ctx context.Context, dryRun bool) error
 }
