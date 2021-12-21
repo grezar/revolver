@@ -10,7 +10,6 @@ import (
 	"github.com/grezar/go-circleci"
 	toprovider "github.com/grezar/revolver/provider/to"
 	"github.com/grezar/revolver/secrets"
-	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -36,9 +35,6 @@ func (t *CircleCI) UnmarshalSpec(bytes []byte) (toprovider.Operator, error) {
 	if err := yaml.Unmarshal(bytes, &s); err != nil {
 		return nil, err
 	}
-	s.Logger = log.WithFields(log.Fields{
-		"provider": name,
-	})
 	return &s, nil
 }
 
@@ -48,7 +44,6 @@ type Spec struct {
 	ProjectVariables []*ProjectVariable `yaml:"projectVariables"`
 	Contexts         []*Context         `yaml:"contexts"`
 	Client           *circleci.Client
-	Logger           log.FieldLogger
 }
 
 type ProjectVariable struct {
@@ -123,7 +118,6 @@ func (s *Spec) Do(ctx context.Context) error {
 		}
 	}
 
-	s.Logger.Info("Success.")
 	return nil
 }
 

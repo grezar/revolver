@@ -9,7 +9,6 @@ import (
 	"github.com/goccy/go-yaml"
 	toprovider "github.com/grezar/revolver/provider/to"
 	"github.com/grezar/revolver/secrets"
-	log "github.com/sirupsen/logrus"
 	"gopkg.in/ini.v1"
 )
 
@@ -39,10 +38,6 @@ func (a *AWSSharedCredentials) UnmarshalSpec(bytes []byte) (toprovider.Operator,
 		return nil, err
 	}
 	s.Secrets = refs
-	s.Logger = log.WithFields(log.Fields{
-		"provider": name,
-	})
-
 	return &s, nil
 }
 
@@ -51,7 +46,6 @@ type Spec struct {
 	Path    string `yaml:"path"`
 	Profile string `yaml:"profile"`
 	Secrets map[string]string
-	Logger  log.FieldLogger
 }
 
 func (s *Spec) Summary() string {
@@ -79,8 +73,6 @@ func (s *Spec) Do(ctx context.Context) error {
 	}
 	defer f.Close()
 
-	s.Logger.Infof("Write the IAM access key as profile %s to %s", s.Profile, s.Path)
-
 	w := bufio.NewWriter(f)
 	_, err = c.WriteTo(w)
 	if err != nil {
@@ -90,7 +82,6 @@ func (s *Spec) Do(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	s.Logger.Infof("Success.")
 
 	return nil
 }
