@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -37,15 +38,23 @@ func main() {
 						Usage:    "Load configuration from `FILE`",
 						Required: true,
 					},
+					&cli.BoolFlag{
+						Name:    "dry-run",
+						Aliases: []string{"d"},
+						Usage:   "Dry run",
+					},
 				},
 				Action: func(c *cli.Context) error {
-					runner, err := revolver.NewRunner(c.String("config"))
+					runner, err := revolver.NewRunner(c.String("config"), c.Bool("dry-run"))
 					if err != nil {
 						return err
 					}
-					reporting.Run(func(rptr *reporting.R) {
+					ok := reporting.Run(func(rptr *reporting.R) {
 						runner.Run(rptr)
 					})
+					if !ok {
+						return errors.New("failed to execute rotations")
+					}
 					return nil
 				},
 			},

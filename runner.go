@@ -18,9 +18,10 @@ import (
 
 type Runner struct {
 	rotations []*schema.Rotation
+	dryRun    bool
 }
 
-func NewRunner(path string) (*Runner, error) {
+func NewRunner(path string, dryRun bool) (*Runner, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, err
@@ -33,6 +34,7 @@ func NewRunner(path string) (*Runner, error) {
 
 	return &Runner{
 		rotations: rotations,
+		dryRun:    dryRun,
 	}, nil
 }
 
@@ -45,7 +47,7 @@ func (r *Runner) Run(rptr *reporting.R) {
 
 			rptr.Run(fmt.Sprintf("From/%s", rn.From.Provider), func(rptr *reporting.R) {
 				rptr.Summary(rn.From.Spec.Operator.Summary())
-				newSecrets, err := rn.From.Spec.Operator.Do(ctx)
+				newSecrets, err := rn.From.Spec.Operator.Do(ctx, r.dryRun)
 				if err != nil {
 					rptr.Fail(err)
 					return
@@ -54,14 +56,18 @@ func (r *Runner) Run(rptr *reporting.R) {
 					rptr.Success()
 					ctx = secrets.WithSecrets(ctx, newSecrets)
 				} else {
-					rptr.Skip()
+					if r.dryRun {
+						rptr.Success()
+					} else {
+						rptr.Skip()
+					}
 				}
 			})
 
 			// Ensure that the cleanup process is invoked when the provider's Do
 			// operation succeeds
 			defer func() {
-				err := rn.From.Spec.Cleanup(ctx)
+				err := rn.From.Spec.Cleanup(ctx, r.dryRun)
 				if err != nil {
 					rptr.Fail(err)
 				}
@@ -72,12 +78,12 @@ func (r *Runner) Run(rptr *reporting.R) {
 				rptr.Run(fmt.Sprintf("To/%s", to.Provider), func(rptr *reporting.R) {
 					rptr.Parallel()
 					rptr.Summary(to.Spec.Operator.Summary())
-					if len(secrets.GetSecrets(ctx)) == 0 {
+					if len(secrets.GetSecrets(ctx)) == 0 && !r.dryRun {
 						rptr.Skip()
 						return
 					}
 
-					err := to.Spec.Operator.Do(ctx)
+					err := to.Spec.Operator.Do(ctx, r.dryRun)
 					if err != nil {
 						rptr.Fail(err)
 						return

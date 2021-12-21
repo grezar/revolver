@@ -20,6 +20,7 @@ func TestSpec_Do(t *testing.T) {
 		Username            string
 		Expiration          string
 		MockIAMAccessKeyAPI mock.MockIAMAccessKeyAPI
+		dryRun              bool
 	}
 	tests := []struct {
 		name    string
@@ -106,6 +107,19 @@ func TestSpec_Do(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{
+			name: "It doesn't do destructive changes in dry-run mode",
+			fields: fields{
+				AccountID:  "0123456789",
+				Username:   "test-iam-user",
+				Expiration: "15m",
+				MockIAMAccessKeyAPI: mock.MockIAMAccessKeyAPI{
+					ListAccessKeysAPI: mock.NewMockListAccessKeysAPI(),
+				},
+				dryRun: true,
+			},
+			want: nil,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -116,7 +130,7 @@ func TestSpec_Do(t *testing.T) {
 				Client:     tt.fields.MockIAMAccessKeyAPI,
 			}
 			ctx := context.Background()
-			got, err := s.Do(ctx)
+			got, err := s.Do(ctx, tt.fields.dryRun)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Spec.Do() error = %v, wantErr %v", err, tt.wantErr)
 			}

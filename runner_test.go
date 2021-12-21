@@ -19,7 +19,8 @@ var (
 
 func TestRunner_Run(t *testing.T) {
 	type fields struct {
-		mockedRotations func(t *testing.T, ctrl *gomock.Controller) []*schema.Rotation
+		mockedRotations func(t *testing.T, ctrl *gomock.Controller, dryRun bool) []*schema.Rotation
+		dryRun          bool
 	}
 	tests := []struct {
 		name    string
@@ -29,7 +30,7 @@ func TestRunner_Run(t *testing.T) {
 		{
 			name: "Secrets are expired, do rotation",
 			fields: fields{
-				mockedRotations: func(t *testing.T, ctrl *gomock.Controller) []*schema.Rotation {
+				mockedRotations: func(t *testing.T, ctrl *gomock.Controller, dryRun bool) []*schema.Rotation {
 					t.Helper()
 
 					ctx := context.Background()
@@ -41,11 +42,11 @@ func TestRunner_Run(t *testing.T) {
 					mockedFromOperator := mockedfp.NewMockOperator(ctrl)
 					mockedToOperator := mockedtp.NewMockOperator(ctrl)
 					mockedFromOperator.EXPECT().Summary().Return("mocked from operator")
-					mockedFromOperator.EXPECT().Do(ctx).Return(expectedSecrets, nil)
+					mockedFromOperator.EXPECT().Do(ctx, dryRun).Return(expectedSecrets, nil)
 					ctx = secrets.WithSecrets(ctx, expectedSecrets)
 					mockedToOperator.EXPECT().Summary().Return("mocked to operator")
-					mockedToOperator.EXPECT().Do(ctx)
-					mockedFromOperator.EXPECT().Cleanup(ctx)
+					mockedToOperator.EXPECT().Do(ctx, dryRun)
+					mockedFromOperator.EXPECT().Cleanup(ctx, dryRun)
 
 					rotations := []*schema.Rotation{
 						{
@@ -72,7 +73,7 @@ func TestRunner_Run(t *testing.T) {
 		{
 			name: "Secrets aren't expired",
 			fields: fields{
-				mockedRotations: func(t *testing.T, ctrl *gomock.Controller) []*schema.Rotation {
+				mockedRotations: func(t *testing.T, ctrl *gomock.Controller, dryRun bool) []*schema.Rotation {
 					t.Helper()
 
 					ctx := context.Background()
@@ -80,8 +81,8 @@ func TestRunner_Run(t *testing.T) {
 
 					mockedFromOperator := mockedfp.NewMockOperator(ctrl)
 					mockedFromOperator.EXPECT().Summary().Return("mocked from operator")
-					mockedFromOperator.EXPECT().Do(ctx).Return(expectedSecrets, nil)
-					mockedFromOperator.EXPECT().Cleanup(ctx)
+					mockedFromOperator.EXPECT().Do(ctx, dryRun).Return(expectedSecrets, nil)
+					mockedFromOperator.EXPECT().Cleanup(ctx, dryRun)
 
 					rotations := []*schema.Rotation{
 						{
@@ -101,15 +102,15 @@ func TestRunner_Run(t *testing.T) {
 		{
 			name: "The from provider returns error and skip following operations",
 			fields: fields{
-				mockedRotations: func(t *testing.T, ctrl *gomock.Controller) []*schema.Rotation {
+				mockedRotations: func(t *testing.T, ctrl *gomock.Controller, dryRun bool) []*schema.Rotation {
 					t.Helper()
 
 					ctx := context.Background()
 
 					mockedFromOperator := mockedfp.NewMockOperator(ctrl)
 					mockedFromOperator.EXPECT().Summary().Return("mocked from operator")
-					mockedFromOperator.EXPECT().Do(ctx).Return(nil, errFakeRunnerTest)
-					mockedFromOperator.EXPECT().Cleanup(ctx)
+					mockedFromOperator.EXPECT().Do(ctx, dryRun).Return(nil, errFakeRunnerTest)
+					mockedFromOperator.EXPECT().Cleanup(ctx, dryRun)
 
 					rotations := []*schema.Rotation{
 						{
@@ -125,11 +126,12 @@ func TestRunner_Run(t *testing.T) {
 					return rotations
 				},
 			},
+			wantErr: true,
 		},
 		{
 			name: "One or more to provider returns an error and the cleanup is invoked",
 			fields: fields{
-				mockedRotations: func(t *testing.T, ctrl *gomock.Controller) []*schema.Rotation {
+				mockedRotations: func(t *testing.T, ctrl *gomock.Controller, dryRun bool) []*schema.Rotation {
 					t.Helper()
 
 					ctx := context.Background()
@@ -141,13 +143,13 @@ func TestRunner_Run(t *testing.T) {
 					mockedToOperator1 := mockedtp.NewMockOperator(ctrl)
 					mockedToOperator2 := mockedtp.NewMockOperator(ctrl)
 					mockedFromOperator.EXPECT().Summary().Return("mocked from operator")
-					mockedFromOperator.EXPECT().Do(ctx).Return(expectedSecrets, nil)
+					mockedFromOperator.EXPECT().Do(ctx, dryRun).Return(expectedSecrets, nil)
 					ctx = secrets.WithSecrets(ctx, expectedSecrets)
 					mockedToOperator1.EXPECT().Summary().Return("mocked to operator 1")
-					mockedToOperator1.EXPECT().Do(ctx).Return(errFakeRunnerTest)
+					mockedToOperator1.EXPECT().Do(ctx, dryRun).Return(errFakeRunnerTest)
 					mockedToOperator2.EXPECT().Summary().Return("mocked to operator 2")
-					mockedToOperator2.EXPECT().Do(ctx).Return(nil)
-					mockedFromOperator.EXPECT().Cleanup(ctx)
+					mockedToOperator2.EXPECT().Do(ctx, dryRun).Return(nil)
+					mockedFromOperator.EXPECT().Cleanup(ctx, dryRun)
 
 					rotations := []*schema.Rotation{
 						{
@@ -175,6 +177,7 @@ func TestRunner_Run(t *testing.T) {
 					return rotations
 				},
 			},
+			wantErr: true,
 		},
 	}
 
@@ -182,12 +185,15 @@ func TestRunner_Run(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			r := &Runner{
-				rotations: tt.fields.mockedRotations(t, ctrl),
+				rotations: tt.fields.mockedRotations(t, ctrl, tt.fields.dryRun),
 			}
 
-			reporting.Run(func(rptr *reporting.R) {
+			ok := reporting.Run(func(rptr *reporting.R) {
 				r.Run(rptr)
 			})
+			if !ok != tt.wantErr {
+				t.Fail()
+			}
 		})
 	}
 }

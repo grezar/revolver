@@ -35,6 +35,7 @@ func TestSpec_Do(t *testing.T) {
 		Secrets      []Secret
 		Variables    func(t *testing.T, ctrl *gomock.Controller, workspaceID string) *mocks.MockVariables
 		Workspaces   func(t *testing.T, ctrl *gomock.Controller, organization string, workspace string, workspaceID string) *mocks.MockWorkspaces
+		dryRun       bool
 	}
 	tests := []struct {
 		name    string
@@ -90,6 +91,41 @@ func TestSpec_Do(t *testing.T) {
 			},
 		},
 		{
+			name: "Met conditions for creating new env secrets but doesn't do destructive changes in dry-run mode",
+			fields: fields{
+				Organization: "org1",
+				Workspace:    "ws1",
+				Secrets: []Secret{
+					{
+						Name:     "SECRET1",
+						Value:    "111",
+						Category: "env",
+					},
+					{
+						Name:     "SECRET2",
+						Value:    "222",
+						Category: "env",
+					},
+				},
+				Variables: func(t *testing.T, ctrl *gomock.Controller, workspaceID string) *mocks.MockVariables {
+					t.Helper()
+
+					ctx := context.Background()
+					mock := mocks.NewMockVariables(ctrl)
+					mock.EXPECT().List(ctx, workspaceID, tfe.VariableListOptions{}).Return(&tfe.VariableList{
+						Pagination: &tfe.Pagination{
+							NextPage:    0,
+							CurrentPage: 0,
+						},
+						Items: []*tfe.Variable{},
+					}, nil)
+					return mock
+				},
+				Workspaces: defaultWorkspaces,
+				dryRun:     true,
+			},
+		},
+		{
 			name: "Create new terraform secrets",
 			fields: fields{
 				Organization: "org1",
@@ -135,6 +171,41 @@ func TestSpec_Do(t *testing.T) {
 					return mock
 				},
 				Workspaces: defaultWorkspaces,
+			},
+		},
+		{
+			name: "Met conditions for creating new terraform secrets but doesn't do destructive changes in dry-run mode",
+			fields: fields{
+				Organization: "org1",
+				Workspace:    "ws1",
+				Secrets: []Secret{
+					{
+						Name:     "SECRET1",
+						Value:    "111",
+						Category: "terraform",
+					},
+					{
+						Name:     "SECRET2",
+						Value:    "222",
+						Category: "terraform",
+					},
+				},
+				Variables: func(t *testing.T, ctrl *gomock.Controller, workspaceID string) *mocks.MockVariables {
+					t.Helper()
+
+					ctx := context.Background()
+					mock := mocks.NewMockVariables(ctrl)
+					mock.EXPECT().List(ctx, workspaceID, tfe.VariableListOptions{}).Return(&tfe.VariableList{
+						Pagination: &tfe.Pagination{
+							NextPage:    0,
+							CurrentPage: 0,
+						},
+						Items: []*tfe.Variable{},
+					}, nil)
+					return mock
+				},
+				Workspaces: defaultWorkspaces,
+				dryRun:     true,
 			},
 		},
 		{
@@ -211,6 +282,44 @@ func TestSpec_Do(t *testing.T) {
 			},
 		},
 		{
+			name: "Met conditions for updating an env secret but doesn't do destructive changes in dry-run mode",
+			fields: fields{
+				Organization: "org1",
+				Workspace:    "ws1",
+				Secrets: []Secret{
+					{
+						Name:     "SECRET1",
+						Value:    "NEWVALUE",
+						Category: "env",
+					},
+				},
+				Variables: func(t *testing.T, ctrl *gomock.Controller, workspaceID string) *mocks.MockVariables {
+					t.Helper()
+
+					ctx := context.Background()
+					variableID := "var-1"
+					mock := mocks.NewMockVariables(ctrl)
+					mock.EXPECT().List(ctx, workspaceID, tfe.VariableListOptions{}).Return(&tfe.VariableList{
+						Pagination: &tfe.Pagination{
+							NextPage:    1,
+							CurrentPage: 1,
+						},
+						Items: []*tfe.Variable{
+							{
+								ID:       variableID,
+								Key:      "SECRET1",
+								Value:    "OLDVALUE",
+								Category: categoryEnv,
+							},
+						},
+					}, nil)
+					return mock
+				},
+				Workspaces: defaultWorkspaces,
+				dryRun:     true,
+			},
+		},
+		{
 			name: "Update an terraform secret",
 			fields: fields{
 				Organization: "org1",
@@ -251,6 +360,44 @@ func TestSpec_Do(t *testing.T) {
 					return mock
 				},
 				Workspaces: defaultWorkspaces,
+			},
+		},
+		{
+			name: "Met conditions for updating an terraform secret but doesn't do destructive changes in dry-run mode",
+			fields: fields{
+				Organization: "org1",
+				Workspace:    "ws1",
+				Secrets: []Secret{
+					{
+						Name:     "SECRET1",
+						Value:    "NEWVALUE",
+						Category: "terraform",
+					},
+				},
+				Variables: func(t *testing.T, ctrl *gomock.Controller, workspaceID string) *mocks.MockVariables {
+					t.Helper()
+
+					ctx := context.Background()
+					variableID := "var-1"
+					mock := mocks.NewMockVariables(ctrl)
+					mock.EXPECT().List(ctx, workspaceID, tfe.VariableListOptions{}).Return(&tfe.VariableList{
+						Pagination: &tfe.Pagination{
+							NextPage:    1,
+							CurrentPage: 1,
+						},
+						Items: []*tfe.Variable{
+							{
+								ID:       variableID,
+								Key:      "SECRET1",
+								Value:    "OLDVALUE",
+								Category: categoryTerraform,
+							},
+						},
+					}, nil)
+					return mock
+				},
+				Workspaces: defaultWorkspaces,
+				dryRun:     true,
 			},
 		},
 		{
@@ -313,7 +460,7 @@ func TestSpec_Do(t *testing.T) {
 
 			ctx := context.Background()
 
-			if err := s.Do(ctx); (err != nil) != tt.wantErr {
+			if err := s.Do(ctx, tt.fields.dryRun); (err != nil) != tt.wantErr {
 				t.Errorf("Spec.Do() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

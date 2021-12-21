@@ -89,32 +89,32 @@ func (m *MockOperator) EXPECT() *MockOperatorMockRecorder {
 }
 
 // Cleanup mocks base method.
-func (m *MockOperator) Cleanup(ctx context.Context) error {
+func (m *MockOperator) Cleanup(ctx context.Context, dryRun bool) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Cleanup", ctx)
+	ret := m.ctrl.Call(m, "Cleanup", ctx, dryRun)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Cleanup indicates an expected call of Cleanup.
-func (mr *MockOperatorMockRecorder) Cleanup(ctx interface{}) *gomock.Call {
+func (mr *MockOperatorMockRecorder) Cleanup(ctx, dryRun interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Cleanup", reflect.TypeOf((*MockOperator)(nil).Cleanup), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Cleanup", reflect.TypeOf((*MockOperator)(nil).Cleanup), ctx, dryRun)
 }
 
 // Do mocks base method.
-func (m *MockOperator) Do(ctx context.Context) (secrets.Secrets, error) {
+func (m *MockOperator) Do(ctx context.Context, dryRun bool) (secrets.Secrets, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Do", ctx)
+	ret := m.ctrl.Call(m, "Do", ctx, dryRun)
 	ret0, _ := ret[0].(secrets.Secrets)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Do indicates an expected call of Do.
-func (mr *MockOperatorMockRecorder) Do(ctx interface{}) *gomock.Call {
+func (mr *MockOperatorMockRecorder) Do(ctx, dryRun interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Do", reflect.TypeOf((*MockOperator)(nil).Do), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Do", reflect.TypeOf((*MockOperator)(nil).Do), ctx, dryRun)
 }
 
 // Summary mocks base method.
