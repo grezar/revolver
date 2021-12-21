@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -48,9 +49,12 @@ func main() {
 					if err != nil {
 						return err
 					}
-					reporting.Run(func(rptr *reporting.R) {
+					ok := reporting.Run(func(rptr *reporting.R) {
 						runner.Run(rptr)
 					})
+					if !ok {
+						return errors.New("failed to execute rotations")
+					}
 					return nil
 				},
 			},

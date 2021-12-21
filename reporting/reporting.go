@@ -15,7 +15,7 @@ const (
 	Error   = "ERROR"
 )
 
-func Run(f func(r *R)) {
+func Run(f func(r *R)) bool {
 	ctx := newReportContext()
 	r := &R{
 		barrier: make(chan bool),
@@ -25,6 +25,7 @@ func Run(f func(r *R)) {
 	go rRunner(r, f)
 	<-r.done
 	r.Render()
+	return !r.Failed()
 }
 
 type R struct {
@@ -203,6 +204,15 @@ func (r *R) Skip() {
 }
 
 func (r *R) Fail(err error) {
-	r.err = err.Error()
+	if r.parent != nil {
+		r.parent.Fail(nil)
+	}
+	if err != nil {
+		r.err = err.Error()
+	}
 	r.status = Error
+}
+
+func (r *R) Failed() bool {
+	return r.status == Error
 }

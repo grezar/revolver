@@ -126,6 +126,7 @@ func TestRunner_Run(t *testing.T) {
 					return rotations
 				},
 			},
+			wantErr: true,
 		},
 		{
 			name: "One or more to provider returns an error and the cleanup is invoked",
@@ -176,6 +177,7 @@ func TestRunner_Run(t *testing.T) {
 					return rotations
 				},
 			},
+			wantErr: true,
 		},
 	}
 
@@ -186,9 +188,12 @@ func TestRunner_Run(t *testing.T) {
 				rotations: tt.fields.mockedRotations(t, ctrl, tt.fields.dryRun),
 			}
 
-			reporting.Run(func(rptr *reporting.R) {
+			ok := reporting.Run(func(rptr *reporting.R) {
 				r.Run(rptr)
 			})
+			if !ok != tt.wantErr {
+				t.Fail()
+			}
 		})
 	}
 }
