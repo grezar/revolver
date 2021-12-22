@@ -1,7 +1,6 @@
 package reporting
 
 import (
-	"fmt"
 	"os"
 	"runtime"
 	"sync"
@@ -148,11 +147,7 @@ func (r *R) Render() {
 	for _, rotation := range r.children {
 		rows = append(rows, []string{rotation.name, "", "", "", ""})
 		for _, provider := range rotation.children {
-			status := provider.status
-			if r.dryRun {
-				status = fmt.Sprintf("DRYRUN/%s", status)
-			}
-			rows = append(rows, []string{"", provider.name, status, provider.summary, provider.err})
+			rows = append(rows, []string{"", provider.name, provider.status, provider.summary, provider.err})
 		}
 	}
 
@@ -176,9 +171,9 @@ func (r *R) Render() {
 			bgColor = tablewriter.BgMagentaColor
 		case "SKIP":
 			bgColor = tablewriter.BgCyanColor
-		case "ERROR", "DRYRUN/ERROR":
+		case "ERROR":
 			bgColor = tablewriter.BgRedColor
-		case "SUCCESS", "DRYRUN/SUCCESS":
+		case "SUCCESS":
 			bgColor = tablewriter.BgGreenColor
 		}
 		table.Rich(row, []tablewriter.Colors{{}, {}, {tablewriter.FgHiBlackColor, tablewriter.Bold, bgColor}, {}})
