@@ -34,14 +34,23 @@ func TestRunner_Run(t *testing.T) {
 					t.Helper()
 
 					ctx := context.Background()
+
+					mockedFromOperator := mockedfp.NewMockOperator(ctrl)
+					mockedToOperator := mockedtp.NewMockOperator(ctrl)
+
+					// advance dry-run
+					mockedFromOperator.EXPECT().Summary().Return("mocked from operator")
+					mockedFromOperator.EXPECT().Do(ctx, true).Return(nil, nil)
+					mockedToOperator.EXPECT().Summary().Return("mocked to operator")
+					mockedToOperator.EXPECT().Do(ctx, true)
+					mockedFromOperator.EXPECT().Cleanup(ctx, true)
+
+					// actual run
+					mockedFromOperator.EXPECT().Summary().Return("mocked from operator")
 					expectedSecrets := secrets.Secrets{
 						"KEY_ID": "key1",
 						"SECRET": "secret1",
 					}
-
-					mockedFromOperator := mockedfp.NewMockOperator(ctrl)
-					mockedToOperator := mockedtp.NewMockOperator(ctrl)
-					mockedFromOperator.EXPECT().Summary().Return("mocked from operator")
 					mockedFromOperator.EXPECT().Do(ctx, dryRun).Return(expectedSecrets, nil)
 					ctx = secrets.WithSecrets(ctx, expectedSecrets)
 					mockedToOperator.EXPECT().Summary().Return("mocked to operator")
@@ -80,6 +89,13 @@ func TestRunner_Run(t *testing.T) {
 					expectedSecrets := secrets.Secrets{}
 
 					mockedFromOperator := mockedfp.NewMockOperator(ctrl)
+
+					// advance dry-run
+					mockedFromOperator.EXPECT().Summary().Return("mocked from operator")
+					mockedFromOperator.EXPECT().Do(ctx, true).Return(nil, nil)
+					mockedFromOperator.EXPECT().Cleanup(ctx, true)
+
+					// actual run
 					mockedFromOperator.EXPECT().Summary().Return("mocked from operator")
 					mockedFromOperator.EXPECT().Do(ctx, dryRun).Return(expectedSecrets, nil)
 					mockedFromOperator.EXPECT().Cleanup(ctx, dryRun)
@@ -108,6 +124,13 @@ func TestRunner_Run(t *testing.T) {
 					ctx := context.Background()
 
 					mockedFromOperator := mockedfp.NewMockOperator(ctrl)
+
+					// advance dry-run
+					mockedFromOperator.EXPECT().Summary().Return("mocked from operator")
+					mockedFromOperator.EXPECT().Do(ctx, true).Return(nil, errFakeRunnerTest)
+					mockedFromOperator.EXPECT().Cleanup(ctx, true)
+
+					// actual run
 					mockedFromOperator.EXPECT().Summary().Return("mocked from operator")
 					mockedFromOperator.EXPECT().Do(ctx, dryRun).Return(nil, errFakeRunnerTest)
 					mockedFromOperator.EXPECT().Cleanup(ctx, dryRun)
@@ -142,6 +165,17 @@ func TestRunner_Run(t *testing.T) {
 					mockedFromOperator := mockedfp.NewMockOperator(ctrl)
 					mockedToOperator1 := mockedtp.NewMockOperator(ctrl)
 					mockedToOperator2 := mockedtp.NewMockOperator(ctrl)
+
+					// advance dry-run
+					mockedFromOperator.EXPECT().Summary().Return("mocked from operator")
+					mockedFromOperator.EXPECT().Do(ctx, true).Return(nil, nil)
+					mockedToOperator1.EXPECT().Summary().Return("mocked to operator 1")
+					mockedToOperator1.EXPECT().Do(ctx, true).Return(errFakeRunnerTest)
+					mockedToOperator2.EXPECT().Summary().Return("mocked to operator 2")
+					mockedToOperator2.EXPECT().Do(ctx, true).Return(nil)
+					mockedFromOperator.EXPECT().Cleanup(ctx, true)
+
+					// actual run
 					mockedFromOperator.EXPECT().Summary().Return("mocked from operator")
 					mockedFromOperator.EXPECT().Do(ctx, dryRun).Return(expectedSecrets, nil)
 					ctx = secrets.WithSecrets(ctx, expectedSecrets)

@@ -216,3 +216,7 @@ func (r *R) Fail(err error) {
 func (r *R) Failed() bool {
 	return r.status == Error
 }
+
+func (r *R) ResetChildren() {
+	r.children = make([]*R, 0)
+}

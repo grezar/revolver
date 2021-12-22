@@ -44,53 +44,67 @@ func (r *Runner) Run(rptr *reporting.R) {
 		rptr.Run(rn.Name, func(rptr *reporting.R) {
 			rptr.Parallel()
 			ctx := context.Background()
-
-			rptr.Run(fmt.Sprintf("From/%s", rn.From.Provider), func(rptr *reporting.R) {
-				rptr.Summary(rn.From.Spec.Operator.Summary())
-				newSecrets, err := rn.From.Spec.Operator.Do(ctx, r.dryRun)
-				if err != nil {
-					rptr.Fail(err)
-					return
-				}
-				if len(newSecrets) > 0 {
-					rptr.Success()
-					ctx = secrets.WithSecrets(ctx, newSecrets)
-				} else {
-					if r.dryRun {
-						rptr.Success()
-					} else {
-						rptr.Skip()
-					}
-				}
-			})
-
-			// Ensure that the cleanup process is invoked when the provider's Do
-			// operation succeeds
-			defer func() {
-				err := rn.From.Spec.Cleanup(ctx, r.dryRun)
-				if err != nil {
-					rptr.Fail(err)
-				}
-			}()
-
-			for _, to := range rn.To {
-				to := to
-				rptr.Run(fmt.Sprintf("To/%s", to.Provider), func(rptr *reporting.R) {
-					rptr.Parallel()
-					rptr.Summary(to.Spec.Operator.Summary())
-					if len(secrets.GetSecrets(ctx)) == 0 && !r.dryRun {
-						rptr.Skip()
-						return
-					}
-
-					err := to.Spec.Operator.Do(ctx, r.dryRun)
-					if err != nil {
-						rptr.Fail(err)
-						return
-					}
-					rptr.Success()
-				})
+			// Always run advance dry-run in order not to rotate the from provider's
+			// resource when the to provider is unavailable.
+			ok := r.run(ctx, rptr, rn, true)
+			if !ok {
+				return
+			}
+			if !r.dryRun {
+				rptr.ResetChildren()
+				_ = r.run(ctx, rptr, rn, false)
 			}
 		})
 	}
+}
+
+func (r *Runner) run(ctx context.Context, rptr *reporting.R, rn *schema.Rotation, dryRun bool) bool {
+	rptr.Run(fmt.Sprintf("From/%s", rn.From.Provider), func(rptr *reporting.R) {
+		rptr.Summary(rn.From.Spec.Operator.Summary())
+		newSecrets, err := rn.From.Spec.Operator.Do(ctx, dryRun)
+		if err != nil {
+			rptr.Fail(err)
+			return
+		}
+		if len(newSecrets) > 0 {
+			rptr.Success()
+			ctx = secrets.WithSecrets(ctx, newSecrets)
+		} else {
+			if dryRun {
+				rptr.Success()
+			} else {
+				rptr.Skip()
+			}
+		}
+	})
+
+	// Ensure that the cleanup process is invoked when the provider's Do
+	// operation succeeds
+	defer func() {
+		err := rn.From.Spec.Cleanup(ctx, dryRun)
+		if err != nil {
+			rptr.Fail(err)
+		}
+	}()
+
+	for _, to := range rn.To {
+		to := to
+		rptr.Run(fmt.Sprintf("To/%s", to.Provider), func(rptr *reporting.R) {
+			rptr.Parallel()
+			rptr.Summary(to.Spec.Operator.Summary())
+			if len(secrets.GetSecrets(ctx)) == 0 && !dryRun {
+				rptr.Skip()
+				return
+			}
+
+			err := to.Spec.Operator.Do(ctx, dryRun)
+			if err != nil {
+				rptr.Fail(err)
+				return
+			}
+			rptr.Success()
+		})
+	}
+
+	return true
 }
