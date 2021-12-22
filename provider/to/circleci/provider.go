@@ -197,6 +197,8 @@ func (s *Spec) UpdateContexts(ctx context.Context, dryRun bool, api *circleci.Cl
 			var contextID string
 			if v, ok := contextList[c.Name]; ok {
 				contextID = v.ID
+			} else {
+				return fmt.Errorf("circleci context not found: %s", c.Name)
 			}
 
 			variableValue, err := secrets.ExecuteTemplate(ctx, v.Value)
