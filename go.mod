@@ -5,7 +5,7 @@ go 1.17
 require (
 	github.com/aws/aws-sdk-go-v2 v1.11.2
 	github.com/aws/aws-sdk-go-v2/config v1.11.1
-	github.com/aws/aws-sdk-go-v2/service/iam v1.13.2
+	github.com/aws/aws-sdk-go-v2/service/iam v1.14.0
 	github.com/goccy/go-yaml v1.9.4
 	github.com/golang/mock v1.6.0
 	github.com/grezar/go-circleci v0.6.0
