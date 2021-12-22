@@ -275,12 +275,17 @@ func TestSpec_UpdateiContexts(t *testing.T) {
 						OwnerSlug: circleci.String("org1"),
 						PageToken: circleci.String(""),
 					}).Return(&circleci.ContextList{
-						Items: []*circleci.Context{},
+						Items: []*circleci.Context{
+							{
+								ID:   "ctx-1",
+								Name: "ctx1",
+							},
+						},
 					}, nil)
-					mock.EXPECT().AddOrUpdateVariable(ctx, "", "SECRET1", circleci.ContextAddOrUpdateVariableOptions{
+					mock.EXPECT().AddOrUpdateVariable(ctx, "ctx-1", "SECRET1", circleci.ContextAddOrUpdateVariableOptions{
 						Value: circleci.String("111"),
 					})
-					mock.EXPECT().AddOrUpdateVariable(ctx, "", "SECRET2", circleci.ContextAddOrUpdateVariableOptions{
+					mock.EXPECT().AddOrUpdateVariable(ctx, "ctx-1", "SECRET2", circleci.ContextAddOrUpdateVariableOptions{
 						Value: circleci.String("222"),
 					})
 					return mock
@@ -315,7 +320,12 @@ func TestSpec_UpdateiContexts(t *testing.T) {
 						OwnerSlug: circleci.String("org1"),
 						PageToken: circleci.String(""),
 					}).Return(&circleci.ContextList{
-						Items: []*circleci.Context{},
+						Items: []*circleci.Context{
+							{
+								ID:   "ctx-1",
+								Name: "ctx1",
+							},
+						},
 					}, nil)
 					return mock
 				},
@@ -395,6 +405,43 @@ func TestSpec_UpdateiContexts(t *testing.T) {
 				},
 				dryRun: true,
 			},
+		},
+		{
+			name: "It returns an error when the matching context is not found",
+			fields: fields{
+				Owner: "org1",
+				ContextVariables: []*Context{
+					{
+						Name: "ctx-not-found",
+						Variables: []*Variable{
+							{
+								Name:  "SECRET1",
+								Value: "111",
+							},
+						},
+					},
+				},
+				Contexts: func(t *testing.T, ctrl *gomock.Controller) *mock.MockContexts {
+					t.Helper()
+
+					ctx := context.Background()
+					mock := mock.NewMockContexts(ctrl)
+					mock.EXPECT().List(ctx, circleci.ContextListOptions{
+						OwnerSlug: circleci.String("org1"),
+						PageToken: circleci.String(""),
+					}).Return(&circleci.ContextList{
+						Items: []*circleci.Context{
+							{
+								ID:   "ctx-1",
+								Name: "ctx1",
+							},
+						},
+					}, nil)
+					return mock
+				},
+				dryRun: true,
+			},
+			wantErr: true,
 		},
 	}
 
