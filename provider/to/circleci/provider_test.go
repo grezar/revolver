@@ -2,6 +2,7 @@ package circleci
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -182,6 +183,33 @@ func TestSpec_UpdateProjectVariables(t *testing.T) {
 					return mock
 				},
 			},
+		},
+		{
+			name: "It returns an error when the matching project is not found",
+			fields: fields{
+				Owner: "org1",
+				ProjectVariables: []*ProjectVariable{
+					{
+						Project: "prj1",
+						Variables: []*Variable{
+							{
+								Name:  "SECRET1",
+								Value: "111",
+							},
+						},
+					},
+				},
+				Projects: func(t *testing.T, ctrl *gomock.Controller) *mock.MockProjects {
+					t.Helper()
+
+					ctx := context.Background()
+					project := "prj1"
+					mock := mock.NewMockProjects(ctrl)
+					mock.EXPECT().ListVariables(ctx, project).Return(nil, errors.New("project is not found"))
+					return mock
+				},
+			},
+			wantErr: true,
 		},
 		{
 			name: "Met conditions for updating project variables but doesn't do destructive changes in dry-run mode",
