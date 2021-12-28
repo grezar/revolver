@@ -27,5 +27,4 @@ type Provider interface {
 type Operator interface {
 	Summary() string
 	Do(ctx context.Context, dryRun bool) (secrets.Secrets, error)
-	Cleanup(ctx context.Context, dryRun bool) error
 }

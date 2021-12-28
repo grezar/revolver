@@ -71,6 +71,7 @@ func TestSpec_Do(t *testing.T) {
 				MockIAMAccessKeyAPI: mock.MockIAMAccessKeyAPI{
 					ListAccessKeysAPI:  mock.NewMockListAccessKeysAPI(),
 					CreateAccessKeyAPI: mock.NewMockCreateAccessKeyAPI(),
+					DeleteAccessKeyAPI: mock.NewMockDeleteAccessKeyAPI(),
 				},
 			},
 			want: secrets.Secrets{

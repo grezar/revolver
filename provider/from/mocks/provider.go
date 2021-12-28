@@ -88,20 +88,6 @@ func (m *MockOperator) EXPECT() *MockOperatorMockRecorder {
 	return m.recorder
 }
 
-// Cleanup mocks base method.
-func (m *MockOperator) Cleanup(ctx context.Context, dryRun bool) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Cleanup", ctx, dryRun)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Cleanup indicates an expected call of Cleanup.
-func (mr *MockOperatorMockRecorder) Cleanup(ctx, dryRun interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Cleanup", reflect.TypeOf((*MockOperator)(nil).Cleanup), ctx, dryRun)
-}
-
 // Do mocks base method.
 func (m *MockOperator) Do(ctx context.Context, dryRun bool) (secrets.Secrets, error) {
 	m.ctrl.T.Helper()
