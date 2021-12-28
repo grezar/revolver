@@ -78,15 +78,6 @@ func (r *Runner) run(ctx context.Context, rptr *reporting.R, rn *schema.Rotation
 		}
 	})
 
-	// Ensure that the cleanup process is invoked when the provider's Do
-	// operation succeeds
-	defer func() {
-		err := rn.From.Spec.Cleanup(ctx, dryRun)
-		if err != nil {
-			rptr.Fail(err)
-		}
-	}()
-
 	for _, to := range rn.To {
 		to := to
 		rptr.Run(fmt.Sprintf("To/%s", to.Provider), func(rptr *reporting.R) {

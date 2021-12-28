@@ -47,11 +47,10 @@ func (u *AWSIAMUser) UnmarshalSpec(bytes []byte) (fromprovider.Operator, error) 
 
 // fromprovider.Operator
 type Spec struct {
-	AccountID     string `yaml:"accountId" validate:"required"`
-	Username      string `yaml:"username" validate:"required"`
-	Expiration    string `yaml:"expiration"`
-	DeletableKeys []types.AccessKey
-	Client        IAMAccessKeyAPI
+	AccountID  string `yaml:"accountId" validate:"required"`
+	Username   string `yaml:"username" validate:"required"`
+	Expiration string `yaml:"expiration"`
+	Client     IAMAccessKeyAPI
 }
 
 func (s *Spec) Summary() string {
@@ -69,23 +68,23 @@ func (s *Spec) buildClient(ctx context.Context) (IAMAccessKeyAPI, error) {
 	return iam.NewFromConfig(cfg), nil
 }
 
-func (s *Spec) Do(ctx context.Context, dryRun bool) (secrets.Secrets, error) {
-	client, err := s.buildClient(ctx)
-	if err != nil {
-		return nil, err
+func (s *Spec) Do(ctx context.Context, dryRun bool) (_ secrets.Secrets, doErr error) {
+	client, doErr := s.buildClient(ctx)
+	if doErr != nil {
+		return nil, doErr
 	}
 
 	inpt := &iam.ListAccessKeysInput{
 		UserName: aws.String(s.Username),
 	}
-	keys, err := ListAccessKeys(ctx, client, inpt)
-	if err != nil {
-		return nil, err
+	keys, doErr := ListAccessKeys(ctx, client, inpt)
+	if doErr != nil {
+		return nil, doErr
 	}
 
-	expiration, err := str2duration.ParseDuration(s.Expiration)
-	if err != nil {
-		return nil, err
+	expiration, doErr := str2duration.ParseDuration(s.Expiration)
+	if doErr != nil {
+		return nil, doErr
 	}
 
 	switch len(keys.AccessKeyMetadata) {
@@ -94,10 +93,12 @@ func (s *Spec) Do(ctx context.Context, dryRun bool) (secrets.Secrets, error) {
 	case 1:
 		if expiration <= time.Since(aws.ToTime(keys.AccessKeyMetadata[0].CreateDate)) {
 
-			s.DeletableKeys = append(s.DeletableKeys, types.AccessKey{
-				AccessKeyId: keys.AccessKeyMetadata[0].AccessKeyId,
-				UserName:    keys.AccessKeyMetadata[0].UserName,
-			})
+			defer func() {
+				doErr = s.cleanup(ctx, dryRun, types.AccessKey{
+					AccessKeyId: keys.AccessKeyMetadata[0].AccessKeyId,
+					UserName:    keys.AccessKeyMetadata[0].UserName,
+				})
+			}()
 		} else {
 			return nil, nil
 		}
@@ -112,9 +113,9 @@ func (s *Spec) Do(ctx context.Context, dryRun bool) (secrets.Secrets, error) {
 	}
 
 	if !dryRun {
-		output, err := CreateAccessKey(ctx, client, input)
-		if err != nil {
-			return nil, err
+		output, doErr := CreateAccessKey(ctx, client, input)
+		if doErr != nil {
+			return nil, doErr
 		}
 
 		return secrets.Secrets{
@@ -126,21 +127,19 @@ func (s *Spec) Do(ctx context.Context, dryRun bool) (secrets.Secrets, error) {
 	return nil, nil
 }
 
-func (s *Spec) Cleanup(ctx context.Context, dryRun bool) error {
+func (s *Spec) cleanup(ctx context.Context, dryRun bool, deletableKey types.AccessKey) error {
 	client, err := s.buildClient(ctx)
 	if err != nil {
 		return err
 	}
-	for _, k := range s.DeletableKeys {
-		input := &iam.DeleteAccessKeyInput{
-			AccessKeyId: k.AccessKeyId,
-			UserName:    k.UserName,
-		}
-		if !dryRun {
-			_, err := DeleteAccessKey(ctx, client, input)
-			if err != nil {
-				return err
-			}
+	input := &iam.DeleteAccessKeyInput{
+		AccessKeyId: deletableKey.AccessKeyId,
+		UserName:    deletableKey.UserName,
+	}
+	if !dryRun {
+		_, err := DeleteAccessKey(ctx, client, input)
+		if err != nil {
+			return err
 		}
 	}
 	return nil

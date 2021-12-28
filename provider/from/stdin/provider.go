@@ -58,8 +58,3 @@ func (s *Spec) Do(ctx context.Context, dryRun bool) (secrets.Secrets, error) {
 		keyInput: input,
 	}, nil
 }
-
-func (s *Spec) Cleanup(ctx context.Context, dryRun bool) error {
-	// No thing to do
-	return nil
-}
