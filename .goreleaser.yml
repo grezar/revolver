@@ -5,6 +5,7 @@ before:
     - go mod tidy
 builds:
   - main: ./cmd/revolver
+    id: cli
     binary: revolver
     ldflags:
       - -s -w
@@ -12,11 +13,31 @@ builds:
       - -X main.Revision={{.ShortCommit}}
     env:
       - CGO_ENABLED=0
+  - main: ./lambda/revolver
+    id: lambda
+    binary: revolver_lambda
+    goos:
+      - linux
+    goarch:
+      - amd64
+    ldflags:
+      - -s -w
+      - -X main.Version={{.Version}}
+      - -X main.Revision={{.ShortCommit}}
 archives:
   - name_template: '{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}'
+    id: cli
     replacements:
       darwin: darwin
       linux: linux
       amd64: x86_64
+    builds:
+      - cli
+  - name_template: "{{ .ProjectName }}_lambda_{{ .Os }}_{{ .Arch }}"
+    id: lambda
+    replacements:
+      amd64: x86_64
+    builds:
+      - lambda
 release:
   prerelease: auto
