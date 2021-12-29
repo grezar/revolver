@@ -47,7 +47,7 @@ func (t *Tfe) UnmarshalSpec(bytes []byte) (toprovider.Operator, error) {
 
 // toprovider.Operator
 type Spec struct {
-	Organization string `yaml:"owner" validate:"required"`
+	Organization string `yaml:"organization" validate:"required"`
 	Workspace    string `yaml:"workspace" validate:"required"`
 	Secrets      []Secret
 	Client       *tfe.Client
