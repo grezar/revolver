@@ -54,9 +54,10 @@ func TestSpec_Do(t *testing.T) {
 						Category: "env",
 					},
 					{
-						Name:     "SECRET2",
-						Value:    "222",
-						Category: "env",
+						Name:      "SECRET2",
+						Value:     "222",
+						Category:  "env",
+						Sensitive: true,
 					},
 				},
 				Variables: func(t *testing.T, ctrl *gomock.Controller, workspaceID string) *mocks.MockVariables {
@@ -75,7 +76,7 @@ func TestSpec_Do(t *testing.T) {
 						Key:       tfe.String("SECRET1"),
 						Value:     tfe.String("111"),
 						Category:  tfe.Category(categoryEnv),
-						Sensitive: tfe.Bool(true),
+						Sensitive: tfe.Bool(false),
 					}).
 						Return(&tfe.Variable{}, nil)
 					mock.EXPECT().Create(ctx, workspaceID, tfe.VariableCreateOptions{
@@ -137,9 +138,10 @@ func TestSpec_Do(t *testing.T) {
 						Category: "terraform",
 					},
 					{
-						Name:     "SECRET2",
-						Value:    "222",
-						Category: "terraform",
+						Name:      "SECRET2",
+						Value:     "222",
+						Category:  "terraform",
+						Sensitive: true,
 					},
 				},
 				Variables: func(t *testing.T, ctrl *gomock.Controller, workspaceID string) *mocks.MockVariables {
@@ -158,7 +160,7 @@ func TestSpec_Do(t *testing.T) {
 						Key:       tfe.String("SECRET1"),
 						Value:     tfe.String("111"),
 						Category:  tfe.Category(categoryTerraform),
-						Sensitive: tfe.Bool(true),
+						Sensitive: tfe.Bool(false),
 					}).
 						Return(&tfe.Variable{}, nil)
 					mock.EXPECT().Create(ctx, workspaceID, tfe.VariableCreateOptions{
@@ -273,7 +275,7 @@ func TestSpec_Do(t *testing.T) {
 					mock.EXPECT().Update(ctx, workspaceID, variableID, tfe.VariableUpdateOptions{
 						Key:       tfe.String("SECRET1"),
 						Value:     tfe.String("NEWVALUE"),
-						Sensitive: tfe.Bool(true),
+						Sensitive: tfe.Bool(false),
 					}).
 						Return(&tfe.Variable{}, nil)
 					return mock
@@ -354,7 +356,7 @@ func TestSpec_Do(t *testing.T) {
 					mock.EXPECT().Update(ctx, workspaceID, variableID, tfe.VariableUpdateOptions{
 						Key:       tfe.String("SECRET1"),
 						Value:     tfe.String("NEWVALUE"),
-						Sensitive: tfe.Bool(true),
+						Sensitive: tfe.Bool(false),
 					}).
 						Return(&tfe.Variable{}, nil)
 					return mock

@@ -49,6 +49,7 @@ You can use YAML to specify the resource from which the key will be issued and t
           - name: AWS_SECRET_ACCESS_KEY
             value: "{{ .AWSSecretAccessKey }}"
             category: "env"
+            sensitive: true
 ```
 
 ## Motivation
@@ -103,6 +104,7 @@ The YAML in this case is as follows
           - name: AWS_SECRET_ACCESS_KEY
             value: "{{ .AWSSecretAccessKey }}"
             category: "env"
+            sensitive: true
 ```
 
 ### Perform key rotations
@@ -239,6 +241,7 @@ If you are using AWSIAMUser, you can refer to `.AWSAccessKeyID` and `.AWSSecretA
           - name: AWS_SECRET_ACCESS_KEY
             value: "{{ .AWSSecretAccessKey }}"
             category: env
+            sensitive: true
 ```
 
 #### Spec
@@ -248,6 +251,7 @@ If you are using AWSIAMUser, you can refer to `.AWSAccessKeyID` and `.AWSSecretA
     - `name` - (Required) Workspace variable name.
     - `value` - (Required) Workspace variable value.
     - `category` - (Defaults to env) Workspace variable category. "env" or "terraform" is available. "env" corresponds to Environment variable, "terraform" corresponds to Terraform variable.
+    - `sensitive` - (Defaults to false) Whether or not to store workspace variable as a sensitive value.
 
 <a name="to-circleci"></a>
 ### To/CircleCI
