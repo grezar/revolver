@@ -54,9 +54,10 @@ type Spec struct {
 }
 
 type Secret struct {
-	Name     string `yaml:"name" validate:"required"`
-	Value    string `yaml:"value" validate:"required"`
-	Category string `yaml:"category"`
+	Name      string `yaml:"name" validate:"required"`
+	Value     string `yaml:"value" validate:"required"`
+	Category  string `yaml:"category"`
+	Sensitive bool   `yaml:"sensitive"`
 }
 
 func (s *Spec) Summary() string {
@@ -129,7 +130,7 @@ func (s *Spec) Do(ctx context.Context, dryRun bool) error {
 				_, err := api.Variables.Update(ctx, workspaceID, wv.ID, tfe.VariableUpdateOptions{
 					Key:       tfe.String(secret.Name),
 					Value:     tfe.String(secretValue),
-					Sensitive: tfe.Bool(true),
+					Sensitive: tfe.Bool(secret.Sensitive),
 				})
 				if err != nil {
 					return err
@@ -141,7 +142,7 @@ func (s *Spec) Do(ctx context.Context, dryRun bool) error {
 					Key:       tfe.String(secret.Name),
 					Value:     tfe.String(secretValue),
 					Category:  tfe.Category(categoryType),
-					Sensitive: tfe.Bool(true),
+					Sensitive: tfe.Bool(secret.Sensitive),
 				})
 				if err != nil {
 					return err

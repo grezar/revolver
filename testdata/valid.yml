@@ -21,6 +21,7 @@
           - name: AWS_SECRET_ACCESS_KEY
             value: "{{ .AWSSecretAccessKey }}"
             category: "env"
+            sensitive: true
 
 - name: Example 2
   from:
