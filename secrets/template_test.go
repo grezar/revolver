@@ -28,6 +28,16 @@ func TestExecuteTemplate(t *testing.T) {
 			want: "SAMPLE_ID",
 		},
 		{
+			name: "Symbols should NOT be escaped",
+			args: args{
+				ctx: WithSecrets(context.Background(), Secrets{
+					"AWSSecretAccessKey": "!@#$%^&*()_+-\\SECRET",
+				}),
+				node: "{{ .AWSSecretAccessKey }}",
+			},
+			want: "!@#$%^&*()_+-\\SECRET",
+		},
+		{
 			name: "Invalid template",
 			args: args{
 				ctx: WithSecrets(context.Background(), Secrets{

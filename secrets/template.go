@@ -2,8 +2,8 @@ package secrets
 
 import (
 	"context"
-	"html/template"
 	"strings"
+	"text/template"
 )
 
 func ExecuteTemplate(ctx context.Context, node string) (string, error) {
