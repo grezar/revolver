@@ -94,11 +94,17 @@ func (s *Spec) Do(ctx context.Context, dryRun bool) error {
 		return err
 	}
 
-	if len(ws.Items) > 1 {
-		return errors.New("Multiple workspaces were found. Please specify a name that matches only one workspace.")
+	var workspaceID string
+
+	for _, w := range ws.Items {
+		if w.Name == s.Workspace {
+			workspaceID = w.ID
+		}
 	}
 
-	workspaceID := ws.Items[0].ID
+	if workspaceID == "" {
+		return fmt.Errorf("Exactly matching workspace with the name %s was not found", s.Workspace)
+	}
 
 	workspaceVariables, err := listWorkspaceVariables(ctx, api, workspaceID)
 	if err != nil {

@@ -21,7 +21,8 @@ func defaultWorkspaces(t *testing.T, ctrl *gomock.Controller, organization strin
 		Return(&tfe.WorkspaceList{
 			Items: []*tfe.Workspace{
 				{
-					ID: workspaceID,
+					ID:   workspaceID,
+					Name: workspace,
 				},
 			},
 		}, nil)
@@ -403,21 +404,18 @@ func TestSpec_Do(t *testing.T) {
 			},
 		},
 		{
-			name: "Ambiguious workspace name provided and fail",
+			name: "Exactly matched workspace is selected as the target",
 			fields: fields{
 				Organization: "org1",
 				Workspace:    "ws",
-				Secrets: []Secret{
-					{
-						Name:     "SECRET1",
-						Value:    "NEWVALUE",
-						Category: "terraform",
-					},
-				},
 				Variables: func(t *testing.T, ctrl *gomock.Controller, workspaceID string) *mocks.MockVariables {
 					t.Helper()
 
+					ctx := context.Background()
 					mock := mocks.NewMockVariables(ctrl)
+					mock.EXPECT().List(ctx, workspaceID, tfe.VariableListOptions{}).Return(&tfe.VariableList{
+						Pagination: &tfe.Pagination{},
+					}, nil)
 					return mock
 				},
 				Workspaces: func(t *testing.T, ctrl *gomock.Controller, organization string, workspace string, workspaceID string) *mocks.MockWorkspaces {
@@ -432,17 +430,18 @@ func TestSpec_Do(t *testing.T) {
 						Return(&tfe.WorkspaceList{
 							Items: []*tfe.Workspace{
 								{
-									ID: "ws-1",
+									ID:   "ws-1",
+									Name: "ws",
 								},
 								{
-									ID: "ws-2",
+									ID:   "ws-2",
+									Name: "ws-not-matched",
 								},
 							},
 						}, nil)
 					return mock
 				},
 			},
-			wantErr: true,
 		},
 	}
 	for _, tt := range tests {

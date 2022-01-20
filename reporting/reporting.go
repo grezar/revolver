@@ -163,6 +163,7 @@ func (r *R) Render() {
 	table.SetBorder(false)
 	table.SetTablePadding("\t")
 	table.SetNoWhiteSpace(true)
+	table.SetColWidth(60)
 
 	var bgColor int
 	for _, row := range rows {
