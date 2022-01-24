@@ -47,10 +47,11 @@ func (u *AWSIAMUser) UnmarshalSpec(bytes []byte) (fromprovider.Operator, error) 
 
 // fromprovider.Operator
 type Spec struct {
-	AccountID  string `yaml:"accountId" validate:"required"`
-	Username   string `yaml:"username" validate:"required"`
-	Expiration string `yaml:"expiration"`
-	Client     IAMAccessKeyAPI
+	AccountID           string `yaml:"accountId" validate:"required"`
+	Username            string `yaml:"username" validate:"required"`
+	Expiration          string `yaml:"expiration"`
+	ForceDeleteOlderKey bool   `yaml:"forceDeleteOlderKey"`
+	Client              IAMAccessKeyAPI
 }
 
 func (s *Spec) Summary() string {
@@ -92,7 +93,6 @@ func (s *Spec) Do(ctx context.Context, dryRun bool) (_ secrets.Secrets, doErr er
 		// Only to proceed to the next step.
 	case 1:
 		if expiration <= time.Since(aws.ToTime(keys.AccessKeyMetadata[0].CreateDate)) {
-
 			defer func() {
 				doErr = s.cleanup(ctx, dryRun, types.AccessKey{
 					AccessKeyId: keys.AccessKeyMetadata[0].AccessKeyId,
@@ -103,7 +103,31 @@ func (s *Spec) Do(ctx context.Context, dryRun bool) (_ secrets.Secrets, doErr er
 			return nil, nil
 		}
 	case 2:
-		return nil, fmt.Errorf(`The user "%s" already has two access keys. Revolver cannot create a new key and cannot continue with the key rotation process. Please delete at least one of the existing keys and try again.`, s.Username)
+		k0 := keys.AccessKeyMetadata[0]
+		k1 := keys.AccessKeyMetadata[1]
+		var olderKey types.AccessKeyMetadata
+		// k0.CreateDate <= k1.CreateDate
+		if k0.CreateDate.Before(aws.ToTime(k1.CreateDate)) {
+			olderKey = k0
+		} else {
+			olderKey = k1
+		}
+		if expiration <= time.Since(aws.ToTime(olderKey.CreateDate)) {
+			if s.ForceDeleteOlderKey {
+				// Delete older key
+				doErr = s.cleanup(ctx, dryRun, types.AccessKey{
+					AccessKeyId: olderKey.AccessKeyId,
+					UserName:    olderKey.UserName,
+				})
+				if doErr != nil {
+					return nil, doErr
+				}
+			} else {
+				return nil, fmt.Errorf(`The user "%s" already has two access keys. Revolver cannot create a new key and cannot continue with the key rotation process. Please delete at least one of the existing keys and try again or you can delete older key (based on created date) with "ForceDeleteOlderKey" option enabled.`, s.Username)
+			}
+		} else {
+			return nil, nil
+		}
 	default:
 		panic("never reach here")
 	}

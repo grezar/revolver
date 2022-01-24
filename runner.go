@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strconv"
 
 	_ "github.com/grezar/revolver/provider/from/awsiamuser"
 	_ "github.com/grezar/revolver/provider/from/stdin"
@@ -14,7 +15,10 @@ import (
 	"github.com/grezar/revolver/reporting"
 	"github.com/grezar/revolver/schema"
 	"github.com/grezar/revolver/secrets"
+	"go.uber.org/ratelimit"
 )
+
+var revolverRateLimit = 5
 
 type Runner struct {
 	rotations []*schema.Rotation
@@ -39,7 +43,17 @@ func NewRunner(path string, dryRun bool) (*Runner, error) {
 }
 
 func (r *Runner) Run(rptr *reporting.R) {
+	if v, ok := os.LookupEnv("REVOLVER_RATE_LIMIT"); ok {
+		var err error
+		revolverRateLimit, err = strconv.Atoi(v)
+		if err != nil {
+			panic(err)
+		}
+	}
+	rl := ratelimit.New(revolverRateLimit)
+
 	for _, rn := range r.rotations {
+		rl.Take()
 		rn := rn
 		rptr.Run(rn.Name, func(rptr *reporting.R) {
 			rptr.Parallel()
