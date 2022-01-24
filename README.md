@@ -115,6 +115,8 @@ You can pass the configuration using `--config` flag so the command to execute w
 ```
 revolver rotate --config rotations.yaml
 ```
+Revolver's rotation rate per second is limited to 5 by default to avoid rate exceeding on an external API calls.
+You can change this rate limit (per second) for rotations via an environment variable named `REVOLVER_RATE_LIMIT`.
 
 ## Providers
 * From
