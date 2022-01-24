@@ -15,7 +15,8 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/urfave/cli/v2 v2.3.0
 	github.com/xhit/go-str2duration/v2 v2.0.0
-	gopkg.in/ini.v1 v1.66.2
+	go.uber.org/ratelimit v0.2.0
+	gopkg.in/ini.v1 v1.66.3
 )
 
 require (
@@ -41,7 +42,6 @@ require (
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/russross/blackfriday/v2 v2.0.1 // indirect
 	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
-	go.uber.org/ratelimit v0.2.0 // indirect
 	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c // indirect
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
