@@ -9,7 +9,7 @@ require (
 	github.com/goccy/go-yaml v1.9.5
 	github.com/golang/mock v1.6.0
 	github.com/grezar/go-circleci v0.6.0
-	github.com/hashicorp/go-tfe v0.22.0
+	github.com/hashicorp/go-tfe v0.24.0
 	github.com/mattn/go-isatty v0.0.14
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/pkg/errors v0.9.1
