@@ -16,12 +16,12 @@ import (
 
 func TestSpec_Do(t *testing.T) {
 	type fields struct {
-		AccountID           string
-		Username            string
-		Expiration          string
-		ForceDeleteOlderKey bool
-		MockIAMAccessKeyAPI mock.MockIAMAccessKeyAPI
-		dryRun              bool
+		AccountID                 string
+		Username                  string
+		Expiration                string
+		ForceDeleteAllExpiredKeys bool
+		MockIAMAccessKeyAPI       mock.MockIAMAccessKeyAPI
+		dryRun                    bool
 	}
 	tests := []struct {
 		name    string
@@ -123,12 +123,12 @@ func TestSpec_Do(t *testing.T) {
 			want: nil,
 		},
 		{
-			name: "Delete older key with ForceDeleteOlderKey enabled and if it's expired",
+			name: "Delete both of expired keys if they're expired with forceDeleteAllExpiredKeys enabled",
 			fields: fields{
-				AccountID:           "0123456789",
-				Username:            "test-iam-user",
-				Expiration:          "90d",
-				ForceDeleteOlderKey: true,
+				AccountID:                 "0123456789",
+				Username:                  "test-iam-user",
+				Expiration:                "90d",
+				ForceDeleteAllExpiredKeys: true,
 				MockIAMAccessKeyAPI: mock.MockIAMAccessKeyAPI{
 					ListAccessKeysAPI: mock.MockListAccessKeys(
 						func(ctx context.Context, params *iam.ListAccessKeysInput, optFns ...func(*iam.Options)) (*iam.ListAccessKeysOutput, error) {
@@ -159,12 +159,12 @@ func TestSpec_Do(t *testing.T) {
 			},
 		},
 		{
-			name: "DO NOT delete older key with ForceDeleteOlderKey enabled if both of key aren't expired",
+			name: "DO NOT delete any keys if all of them aren't expired with forceDeleteAllExpiredKeys enabled",
 			fields: fields{
-				AccountID:           "0123456789",
-				Username:            "test-iam-user",
-				Expiration:          "90d",
-				ForceDeleteOlderKey: true,
+				AccountID:                 "0123456789",
+				Username:                  "test-iam-user",
+				Expiration:                "90d",
+				ForceDeleteAllExpiredKeys: true,
 				MockIAMAccessKeyAPI: mock.MockIAMAccessKeyAPI{
 					ListAccessKeysAPI: mock.MockListAccessKeys(
 						func(ctx context.Context, params *iam.ListAccessKeysInput, optFns ...func(*iam.Options)) (*iam.ListAccessKeysOutput, error) {
@@ -193,11 +193,11 @@ func TestSpec_Do(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &Spec{
-				AccountID:           tt.fields.AccountID,
-				Username:            tt.fields.Username,
-				Expiration:          tt.fields.Expiration,
-				ForceDeleteOlderKey: tt.fields.ForceDeleteOlderKey,
-				Client:              tt.fields.MockIAMAccessKeyAPI,
+				AccountID:                 tt.fields.AccountID,
+				Username:                  tt.fields.Username,
+				Expiration:                tt.fields.Expiration,
+				ForceDeleteAllExpiredKeys: tt.fields.ForceDeleteAllExpiredKeys,
+				Client:                    tt.fields.MockIAMAccessKeyAPI,
 			}
 			ctx := context.Background()
 			got, err := s.Do(ctx, tt.fields.dryRun)

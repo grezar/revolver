@@ -47,11 +47,11 @@ func (u *AWSIAMUser) UnmarshalSpec(bytes []byte) (fromprovider.Operator, error) 
 
 // fromprovider.Operator
 type Spec struct {
-	AccountID           string `yaml:"accountId" validate:"required"`
-	Username            string `yaml:"username" validate:"required"`
-	Expiration          string `yaml:"expiration"`
-	ForceDeleteOlderKey bool   `yaml:"forceDeleteOlderKey"`
-	Client              IAMAccessKeyAPI
+	AccountID                 string `yaml:"accountId" validate:"required"`
+	Username                  string `yaml:"username" validate:"required"`
+	Expiration                string `yaml:"expiration"`
+	ForceDeleteAllExpiredKeys bool   `yaml:"forceDeleteAllExpiredKeys"`
+	Client                    IAMAccessKeyAPI
 }
 
 func (s *Spec) Summary() string {
@@ -103,30 +103,26 @@ func (s *Spec) Do(ctx context.Context, dryRun bool) (_ secrets.Secrets, doErr er
 			return nil, nil
 		}
 	case 2:
-		k0 := keys.AccessKeyMetadata[0]
-		k1 := keys.AccessKeyMetadata[1]
-		var olderKey types.AccessKeyMetadata
-		// k0.CreateDate <= k1.CreateDate
-		if k0.CreateDate.Before(aws.ToTime(k1.CreateDate)) {
-			olderKey = k0
-		} else {
-			olderKey = k1
-		}
-		if expiration <= time.Since(aws.ToTime(olderKey.CreateDate)) {
-			if s.ForceDeleteOlderKey {
-				// Delete older key
-				doErr = s.cleanup(ctx, dryRun, types.AccessKey{
-					AccessKeyId: olderKey.AccessKeyId,
-					UserName:    olderKey.UserName,
-				})
-				if doErr != nil {
-					return nil, doErr
+		var deletedAtLeastOne bool
+		if s.ForceDeleteAllExpiredKeys {
+			for _, key := range keys.AccessKeyMetadata {
+				if expiration <= time.Since(aws.ToTime(key.CreateDate)) {
+					doErr = s.cleanup(ctx, dryRun, types.AccessKey{
+						AccessKeyId: key.AccessKeyId,
+						UserName:    key.UserName,
+					})
+					if doErr != nil {
+						return nil, doErr
+					}
+					deletedAtLeastOne = true
 				}
-			} else {
-				return nil, fmt.Errorf(`The user "%s" already has two access keys. Revolver cannot create a new key and cannot continue with the key rotation process. Please delete at least one of the existing keys and try again or you can delete older key (based on created date) with "ForceDeleteOlderKey" option enabled.`, s.Username)
+			}
+			// Skip following steps if not delete any of the keys.
+			if !deletedAtLeastOne {
+				return nil, nil
 			}
 		} else {
-			return nil, nil
+			return nil, fmt.Errorf(`The user "%s" already has two access keys. Revolver cannot create a new key and cannot continue with the key rotation process. Please delete at least one of the existing keys and try again or you can delete all of expired keys with "forceDeleteAllExpiredKeys" option enabled.`, s.Username)
 		}
 	default:
 		panic("never reach here")
