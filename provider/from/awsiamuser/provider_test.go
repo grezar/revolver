@@ -19,6 +19,7 @@ func TestSpec_Do(t *testing.T) {
 		AccountID           string
 		Username            string
 		Expiration          string
+		ForceDeleteOlderKey bool
 		MockIAMAccessKeyAPI mock.MockIAMAccessKeyAPI
 		dryRun              bool
 	}
@@ -121,14 +122,82 @@ func TestSpec_Do(t *testing.T) {
 			},
 			want: nil,
 		},
+		{
+			name: "Delete older key with ForceDeleteOlderKey enabled and if it's expired",
+			fields: fields{
+				AccountID:           "0123456789",
+				Username:            "test-iam-user",
+				Expiration:          "90d",
+				ForceDeleteOlderKey: true,
+				MockIAMAccessKeyAPI: mock.MockIAMAccessKeyAPI{
+					ListAccessKeysAPI: mock.MockListAccessKeys(
+						func(ctx context.Context, params *iam.ListAccessKeysInput, optFns ...func(*iam.Options)) (*iam.ListAccessKeysOutput, error) {
+							return &iam.ListAccessKeysOutput{
+								AccessKeyMetadata: []types.AccessKeyMetadata{
+									{
+										AccessKeyId: aws.String("EXPIRED1"),
+										CreateDate:  aws.Time(time.Now().Add(-24 * 200 * time.Hour)),
+										UserName:    aws.String("test-iam-user"),
+									},
+									{
+										AccessKeyId: aws.String("EXPIRED2"),
+										CreateDate:  aws.Time(time.Now().Add(-24 * 180 * time.Hour)),
+										UserName:    aws.String("test-iam-user"),
+									},
+								},
+							}, nil
+						},
+					),
+					CreateAccessKeyAPI: mock.NewMockCreateAccessKeyAPI(),
+					DeleteAccessKeyAPI: mock.NewMockDeleteAccessKeyAPI(),
+				},
+				dryRun: false,
+			},
+			want: secrets.Secrets{
+				"AWSAccessKeyID":     "BBBBBBBBBBBB",
+				"AWSSecretAccessKey": "CCCCCCCCCCCC",
+			},
+		},
+		{
+			name: "DO NOT delete older key with ForceDeleteOlderKey enabled if both of key aren't expired",
+			fields: fields{
+				AccountID:           "0123456789",
+				Username:            "test-iam-user",
+				Expiration:          "90d",
+				ForceDeleteOlderKey: true,
+				MockIAMAccessKeyAPI: mock.MockIAMAccessKeyAPI{
+					ListAccessKeysAPI: mock.MockListAccessKeys(
+						func(ctx context.Context, params *iam.ListAccessKeysInput, optFns ...func(*iam.Options)) (*iam.ListAccessKeysOutput, error) {
+							return &iam.ListAccessKeysOutput{
+								AccessKeyMetadata: []types.AccessKeyMetadata{
+									{
+										AccessKeyId: aws.String("NOTEXPIRED1"),
+										CreateDate:  aws.Time(time.Now().Add(-24 * 1 * time.Hour)),
+										UserName:    aws.String("test-iam-user"),
+									},
+									{
+										AccessKeyId: aws.String("NOTEXPIRED2"),
+										CreateDate:  aws.Time(time.Now().Add(-24 * 1 * time.Hour)),
+										UserName:    aws.String("test-iam-user"),
+									},
+								},
+							}, nil
+						},
+					),
+				},
+				dryRun: false,
+			},
+			want: nil,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &Spec{
-				AccountID:  tt.fields.AccountID,
-				Username:   tt.fields.Username,
-				Expiration: tt.fields.Expiration,
-				Client:     tt.fields.MockIAMAccessKeyAPI,
+				AccountID:           tt.fields.AccountID,
+				Username:            tt.fields.Username,
+				Expiration:          tt.fields.Expiration,
+				ForceDeleteOlderKey: tt.fields.ForceDeleteOlderKey,
+				Client:              tt.fields.MockIAMAccessKeyAPI,
 			}
 			ctx := context.Background()
 			got, err := s.Do(ctx, tt.fields.dryRun)
