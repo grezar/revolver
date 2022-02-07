@@ -7,6 +7,7 @@ import (
 	"github.com/golang/mock/gomock"
 	tfe "github.com/hashicorp/go-tfe"
 	"github.com/hashicorp/go-tfe/mocks"
+	"go.uber.org/ratelimit"
 )
 
 func defaultWorkspaces(t *testing.T, ctrl *gomock.Controller, organization string, workspace string, workspaceID string) *mocks.MockWorkspaces {
@@ -457,6 +458,7 @@ func TestSpec_Do(t *testing.T) {
 				Workspace:    tt.fields.Workspace,
 				Secrets:      tt.fields.Secrets,
 				Client:       mockTfeAPI,
+				RateLimit:    ratelimit.New(apiRateLimit),
 			}
 
 			ctx := context.Background()

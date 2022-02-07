@@ -13,6 +13,7 @@ import (
 	fromprovider "github.com/grezar/revolver/provider/from"
 	"github.com/grezar/revolver/secrets"
 	str2duration "github.com/xhit/go-str2duration/v2"
+	"go.uber.org/ratelimit"
 )
 
 const (
@@ -20,14 +21,21 @@ const (
 	keyAWSAccessKeyID     = "AWSAccessKeyID"
 	keyAWSSecretAccessKey = "AWSSecretAccessKey"
 	awsDefaultRegion      = "us-east-1"
+	// Though the value is not officially documented, enough small to avoid
+	// rate limiting errors.
+	apiRateLimit = 3
 )
 
 func init() {
-	fromprovider.Register(&AWSIAMUser{})
+	fromprovider.Register(&AWSIAMUser{
+		RateLimit: ratelimit.New(apiRateLimit),
+	})
 }
 
 // fromprovider.Provider
-type AWSIAMUser struct{}
+type AWSIAMUser struct {
+	RateLimit ratelimit.Limiter
+}
 
 func (u *AWSIAMUser) Name() string {
 	return name
@@ -42,6 +50,7 @@ func (u *AWSIAMUser) UnmarshalSpec(bytes []byte) (fromprovider.Operator, error) 
 		// default expiration is set to 90 days
 		s.Expiration = "90d"
 	}
+	s.RateLimit = u.RateLimit
 	return &s, nil
 }
 
@@ -52,6 +61,7 @@ type Spec struct {
 	Expiration                string `yaml:"expiration"`
 	ForceDeleteAllExpiredKeys bool   `yaml:"forceDeleteAllExpiredKeys"`
 	Client                    IAMAccessKeyAPI
+	RateLimit                 ratelimit.Limiter
 }
 
 func (s *Spec) Summary() string {
@@ -78,6 +88,7 @@ func (s *Spec) Do(ctx context.Context, dryRun bool) (_ secrets.Secrets, doErr er
 	inpt := &iam.ListAccessKeysInput{
 		UserName: aws.String(s.Username),
 	}
+	s.RateLimit.Take()
 	keys, doErr := ListAccessKeys(ctx, client, inpt)
 	if doErr != nil {
 		return nil, doErr
@@ -133,6 +144,7 @@ func (s *Spec) Do(ctx context.Context, dryRun bool) (_ secrets.Secrets, doErr er
 	}
 
 	if !dryRun {
+		s.RateLimit.Take()
 		output, doErr := CreateAccessKey(ctx, client, input)
 		if doErr != nil {
 			return nil, doErr
@@ -157,6 +169,7 @@ func (s *Spec) cleanup(ctx context.Context, dryRun bool, deletableKey types.Acce
 		UserName:    deletableKey.UserName,
 	}
 	if !dryRun {
+		s.RateLimit.Take()
 		_, err := DeleteAccessKey(ctx, client, input)
 		if err != nil {
 			return err

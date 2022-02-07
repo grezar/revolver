@@ -10,15 +10,23 @@ import (
 	"github.com/grezar/go-circleci"
 	toprovider "github.com/grezar/revolver/provider/to"
 	"github.com/grezar/revolver/secrets"
+	"go.uber.org/ratelimit"
 )
 
 const (
 	name                     = "CircleCI"
 	revolverCircleCITokenKey = "REVOLVER_CIRCLECI_TOKEN"
+	// Ref: https://circleci.com/docs/2.0/api-developers-guide/#rate-limits
+	// Since there are different protections and limits in place for different parts of
+	// the API, we cannot use a concrete value for this so I assumed this value is enough
+	// small to avoid rate limiting errors.
+	apiRateLimit = 5
 )
 
 func init() {
-	toprovider.Register(&CircleCI{})
+	toprovider.Register(&CircleCI{
+		RateLimit: ratelimit.New(apiRateLimit),
+	})
 }
 
 func (t *CircleCI) Name() string {
@@ -27,7 +35,8 @@ func (t *CircleCI) Name() string {
 
 // toprovider.Provider
 type CircleCI struct {
-	Token string
+	Token     string
+	RateLimit ratelimit.Limiter
 }
 
 func (t *CircleCI) UnmarshalSpec(bytes []byte) (toprovider.Operator, error) {
@@ -35,6 +44,7 @@ func (t *CircleCI) UnmarshalSpec(bytes []byte) (toprovider.Operator, error) {
 	if err := yaml.Unmarshal(bytes, &s); err != nil {
 		return nil, err
 	}
+	s.RateLimit = t.RateLimit
 	return &s, nil
 }
 
@@ -44,6 +54,7 @@ type Spec struct {
 	ProjectVariables []*ProjectVariable `yaml:"projectVariables"`
 	Contexts         []*Context         `yaml:"contexts"`
 	Client           *circleci.Client
+	RateLimit        ratelimit.Limiter
 }
 
 type ProjectVariable struct {
@@ -104,7 +115,7 @@ func (s *Spec) Do(ctx context.Context, dryRun bool) error {
 
 	// Update project variables if any
 	if len(s.ProjectVariables) > 0 {
-		err = s.UpdateProjectVariables(ctx, dryRun, api)
+		err = s.UpdateProjectVariables(ctx, dryRun, api, s.RateLimit)
 		if err != nil {
 			return err
 		}
@@ -112,7 +123,7 @@ func (s *Spec) Do(ctx context.Context, dryRun bool) error {
 
 	// Update context variables if any
 	if len(s.Contexts) > 0 {
-		err = s.UpdateContexts(ctx, dryRun, api)
+		err = s.UpdateContexts(ctx, dryRun, api, s.RateLimit)
 		if err != nil {
 			return err
 		}
@@ -121,8 +132,9 @@ func (s *Spec) Do(ctx context.Context, dryRun bool) error {
 	return nil
 }
 
-func (s *Spec) UpdateProjectVariables(ctx context.Context, dryRun bool, api *circleci.Client) error {
+func (s *Spec) UpdateProjectVariables(ctx context.Context, dryRun bool, api *circleci.Client, ratelimit ratelimit.Limiter) error {
 	for _, pv := range s.ProjectVariables {
+		ratelimit.Take()
 		pvl, err := api.Projects.ListVariables(ctx, pv.Project)
 		if err != nil {
 			return err
@@ -137,6 +149,7 @@ func (s *Spec) UpdateProjectVariables(ctx context.Context, dryRun bool, api *cir
 			// if the project variable already exists with the same name, delete it before creating a new one
 			if projectVariableList[v.Name] != nil {
 				if !dryRun {
+					ratelimit.Take()
 					err := api.Projects.DeleteVariable(ctx, pv.Project, v.Name)
 					if err != nil {
 						return err
@@ -150,6 +163,7 @@ func (s *Spec) UpdateProjectVariables(ctx context.Context, dryRun bool, api *cir
 			}
 
 			if !dryRun {
+				ratelimit.Take()
 				_, err = api.Projects.CreateVariable(ctx, pv.Project, circleci.ProjectCreateVariableOptions{
 					Name:  circleci.String(v.Name),
 					Value: circleci.String(variableValue),
@@ -164,7 +178,7 @@ func (s *Spec) UpdateProjectVariables(ctx context.Context, dryRun bool, api *cir
 	return nil
 }
 
-func (s *Spec) UpdateContexts(ctx context.Context, dryRun bool, api *circleci.Client) error {
+func (s *Spec) UpdateContexts(ctx context.Context, dryRun bool, api *circleci.Client, ratelimit ratelimit.Limiter) error {
 	var contexts []*circleci.Context
 	var err error
 	cl := &circleci.ContextList{
@@ -172,6 +186,7 @@ func (s *Spec) UpdateContexts(ctx context.Context, dryRun bool, api *circleci.Cl
 	}
 
 	for {
+		ratelimit.Take()
 		cl, err = api.Contexts.List(ctx, circleci.ContextListOptions{
 			OwnerSlug: circleci.String(s.Owner),
 			PageToken: circleci.String(cl.NextPageToken),
@@ -207,6 +222,7 @@ func (s *Spec) UpdateContexts(ctx context.Context, dryRun bool, api *circleci.Cl
 			}
 
 			if !dryRun {
+				ratelimit.Take()
 				_, err = api.Contexts.AddOrUpdateVariable(ctx, contextID, v.Name, circleci.ContextAddOrUpdateVariableOptions{
 					Value: circleci.String(variableValue),
 				})
