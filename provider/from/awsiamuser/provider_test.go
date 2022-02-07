@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/grezar/revolver/provider/from/awsiamuser/mock"
 	"github.com/grezar/revolver/secrets"
+	"go.uber.org/ratelimit"
 )
 
 func TestSpec_Do(t *testing.T) {
@@ -198,6 +199,7 @@ func TestSpec_Do(t *testing.T) {
 				Expiration:                tt.fields.Expiration,
 				ForceDeleteAllExpiredKeys: tt.fields.ForceDeleteAllExpiredKeys,
 				Client:                    tt.fields.MockIAMAccessKeyAPI,
+				RateLimit:                 ratelimit.New(apiRateLimit),
 			}
 			ctx := context.Background()
 			got, err := s.Do(ctx, tt.fields.dryRun)

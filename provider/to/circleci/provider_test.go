@@ -8,6 +8,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/grezar/go-circleci"
 	mock "github.com/grezar/go-circleci/mocks"
+	"go.uber.org/ratelimit"
 )
 
 func TestSpec_Summary(t *testing.T) {
@@ -51,6 +52,7 @@ func TestSpec_Summary(t *testing.T) {
 				Owner:            tt.fields.Owner,
 				ProjectVariables: tt.fields.ProjectVariables,
 				Contexts:         tt.fields.Contexts,
+				RateLimit:        ratelimit.New(apiRateLimit),
 			}
 			if got := s.Summary(); got != tt.want {
 				t.Errorf("Spec.Summary() = %v, want %v", got, tt.want)
@@ -255,8 +257,9 @@ func TestSpec_UpdateProjectVariables(t *testing.T) {
 			s := &Spec{
 				Owner:            tt.fields.Owner,
 				ProjectVariables: tt.fields.ProjectVariables,
+				RateLimit:        ratelimit.New(apiRateLimit),
 			}
-			if err := s.UpdateProjectVariables(context.Background(), tt.fields.dryRun, mockCircleCIAPI); (err != nil) != tt.wantErr {
+			if err := s.UpdateProjectVariables(context.Background(), tt.fields.dryRun, mockCircleCIAPI, s.RateLimit); (err != nil) != tt.wantErr {
 				t.Errorf("Spec.UpdateContexts() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -479,10 +482,11 @@ func TestSpec_UpdateiContexts(t *testing.T) {
 			mockCircleCIAPI := &circleci.Client{}
 			mockCircleCIAPI.Contexts = tt.fields.Contexts(t, ctrl)
 			s := &Spec{
-				Owner:    tt.fields.Owner,
-				Contexts: tt.fields.ContextVariables,
+				Owner:     tt.fields.Owner,
+				Contexts:  tt.fields.ContextVariables,
+				RateLimit: ratelimit.New(apiRateLimit),
 			}
-			if err := s.UpdateContexts(context.Background(), tt.fields.dryRun, mockCircleCIAPI); (err != nil) != tt.wantErr {
+			if err := s.UpdateContexts(context.Background(), tt.fields.dryRun, mockCircleCIAPI, s.RateLimit); (err != nil) != tt.wantErr {
 				t.Errorf("Spec.UpdateContexts() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

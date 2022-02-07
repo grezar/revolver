@@ -10,6 +10,7 @@ import (
 	toprovider "github.com/grezar/revolver/provider/to"
 	"github.com/grezar/revolver/secrets"
 	tfe "github.com/hashicorp/go-tfe"
+	"go.uber.org/ratelimit"
 )
 
 const (
@@ -17,6 +18,8 @@ const (
 	revolverTfeTokenKey                  = "REVOLVER_TFE_TOKEN"
 	categoryEnv         tfe.CategoryType = "env"
 	categoryTerraform   tfe.CategoryType = "terraform"
+	// Ref: https://www.terraform.io/enterprise/admin/application/general#api-rate-limiting
+	apiRateLimit = 30
 )
 
 var categoryTypes map[string]tfe.CategoryType = map[string]tfe.CategoryType{
@@ -25,7 +28,9 @@ var categoryTypes map[string]tfe.CategoryType = map[string]tfe.CategoryType{
 }
 
 func init() {
-	toprovider.Register(&Tfe{})
+	toprovider.Register(&Tfe{
+		RateLimit: ratelimit.New(apiRateLimit),
+	})
 }
 
 func (t *Tfe) Name() string {
@@ -34,7 +39,8 @@ func (t *Tfe) Name() string {
 
 // toprovider.Provider
 type Tfe struct {
-	Token string
+	Token     string
+	RateLimit ratelimit.Limiter
 }
 
 func (t *Tfe) UnmarshalSpec(bytes []byte) (toprovider.Operator, error) {
@@ -42,6 +48,7 @@ func (t *Tfe) UnmarshalSpec(bytes []byte) (toprovider.Operator, error) {
 	if err := yaml.Unmarshal(bytes, &s); err != nil {
 		return nil, err
 	}
+	s.RateLimit = t.RateLimit
 	return &s, nil
 }
 
@@ -51,6 +58,7 @@ type Spec struct {
 	Workspace    string `yaml:"workspace" validate:"required"`
 	Secrets      []Secret
 	Client       *tfe.Client
+	RateLimit    ratelimit.Limiter
 }
 
 type Secret struct {
@@ -106,7 +114,7 @@ func (s *Spec) Do(ctx context.Context, dryRun bool) error {
 		return fmt.Errorf("Exactly matching workspace with the name %s was not found", s.Workspace)
 	}
 
-	workspaceVariables, err := listWorkspaceVariables(ctx, api, workspaceID)
+	workspaceVariables, err := listWorkspaceVariables(ctx, api, s.RateLimit, workspaceID)
 	if err != nil {
 		return err
 	}
@@ -133,6 +141,7 @@ func (s *Spec) Do(ctx context.Context, dryRun bool) error {
 		wv := workspaceVariableList[secret.Name]
 		if wv != nil && (categoryType == wv.Category) {
 			if !dryRun {
+				s.RateLimit.Take()
 				_, err := api.Variables.Update(ctx, workspaceID, wv.ID, tfe.VariableUpdateOptions{
 					Key:       tfe.String(secret.Name),
 					Value:     tfe.String(secretValue),
@@ -144,6 +153,7 @@ func (s *Spec) Do(ctx context.Context, dryRun bool) error {
 			}
 		} else {
 			if !dryRun {
+				s.RateLimit.Take()
 				_, err := api.Variables.Create(ctx, workspaceID, tfe.VariableCreateOptions{
 					Key:       tfe.String(secret.Name),
 					Value:     tfe.String(secretValue),
@@ -160,9 +170,10 @@ func (s *Spec) Do(ctx context.Context, dryRun bool) error {
 	return nil
 }
 
-func listWorkspaceVariables(ctx context.Context, api *tfe.Client, workspaceID string) ([]*tfe.VariableList, error) {
+func listWorkspaceVariables(ctx context.Context, api *tfe.Client, ratelimit ratelimit.Limiter, workspaceID string) ([]*tfe.VariableList, error) {
 	var workspaceVariables []*tfe.VariableList
 
+	ratelimit.Take()
 	workspaceVariable, err := api.Variables.List(ctx, workspaceID, tfe.VariableListOptions{})
 	if err != nil {
 		return nil, err
@@ -170,6 +181,7 @@ func listWorkspaceVariables(ctx context.Context, api *tfe.Client, workspaceID st
 	workspaceVariables = append(workspaceVariables, workspaceVariable)
 
 	for workspaceVariable.CurrentPage < workspaceVariable.NextPage {
+		ratelimit.Take()
 		workspaceVariable, err = api.Variables.List(ctx, workspaceID, tfe.VariableListOptions{
 			ListOptions: tfe.ListOptions{
 				PageNumber: workspaceVariable.NextPage,
