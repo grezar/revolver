@@ -52,6 +52,10 @@ You can use YAML to specify the resource from which the key will be issued and t
             sensitive: true
 ```
 
+And you will get the following output if the key rotation is successful.
+
+![Example Output](https://user-images.githubusercontent.com/27184133/159518246-e97aeb81-4162-484b-b3bc-fd82d2f02151.png)
+
 ## Motivation
 It is recommended as a best practice from a security perspective that secrets
 such as IAM User access keys be rotated periodically. On the other hand, it is
@@ -311,4 +315,4 @@ If you are using AWSIAMUser, you can refer to `.AWSAccessKeyID` and `.AWSSecretA
       - `value` - (Required) Environment variable value of the CircleCI context.
 
 ## License
-[The MIT License (MIT)](https://https://github.com/grezar/revolver/blob/main/LICENSE)
+[The MIT License (MIT)](https://github.com/grezar/revolver/blob/main/LICENSE)
