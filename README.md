@@ -311,4 +311,4 @@ If you are using AWSIAMUser, you can refer to `.AWSAccessKeyID` and `.AWSSecretA
       - `value` - (Required) Environment variable value of the CircleCI context.
 
 ## License
-[The MIT License (MIT)](https://https://github.com/grezar/revolver/blob/main/LICENSE)
+[The MIT License (MIT)](https://github.com/grezar/revolver/blob/main/LICENSE)
