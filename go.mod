@@ -13,7 +13,7 @@ require (
 	github.com/mattn/go-isatty v0.0.14
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/pkg/errors v0.9.1
-	github.com/urfave/cli/v2 v2.3.0
+	github.com/urfave/cli/v2 v2.24.2
 	github.com/xhit/go-str2duration/v2 v2.0.0
 	go.uber.org/ratelimit v0.2.0
 	gopkg.in/ini.v1 v1.66.4
@@ -30,7 +30,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sso v1.11.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.16.0 // indirect
 	github.com/aws/smithy-go v1.11.1 // indirect
-	github.com/cpuguy83/go-md2man/v2 v2.0.0-20190314233015-f79a8a8ca69d // indirect
+	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/fatih/color v1.10.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
@@ -40,8 +40,8 @@ require (
 	github.com/mattn/go-colorable v0.1.8 // indirect
 	github.com/mattn/go-runewidth v0.0.13 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
-	github.com/russross/blackfriday/v2 v2.0.1 // indirect
-	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
+	github.com/russross/blackfriday/v2 v2.1.0 // indirect
+	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
 	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c // indirect
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
