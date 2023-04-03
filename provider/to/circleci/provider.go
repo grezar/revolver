@@ -20,7 +20,7 @@ const (
 	// Since there are different protections and limits in place for different parts of
 	// the API, we cannot use a concrete value for this so I assumed this value is enough
 	// small to avoid rate limiting errors.
-	apiRateLimit = 5
+	apiRateLimit = 15
 )
 
 func init() {
